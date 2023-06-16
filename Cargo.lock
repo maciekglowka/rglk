@@ -360,6 +360,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "rglk_storage"
+version = "0.1.0"
+
+[[package]]
 name = "simd-adler32"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
