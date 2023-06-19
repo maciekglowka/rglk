@@ -6,7 +6,7 @@ pub use world::World;
 
 type IdSize = u16;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Entity {
     pub id: IdSize,
     pub version: IdSize

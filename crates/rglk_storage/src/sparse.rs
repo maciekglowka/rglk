@@ -1,9 +1,13 @@
+use std::cell::RefCell;
 
 use super::{Entity, IdSize};
 use super::errors::EntityError;
 
 const GUARD_ID: IdSize = IdSize::MAX;
-// const GUARD_ENTITY: Entity = Entity { id: GUARD_ID, version: GUARD_ID };
+
+pub struct StorageCell<T> {
+    pub inner: RefCell<SparseSet<T>>
+}
 
 pub struct SparseSet<T> {
     dense: Vec<Entity>,
@@ -59,10 +63,17 @@ impl<T> SparseSet<T> {
         self.sparse[entity.id as usize] = GUARD_ID;
         removed
     }
+    pub fn entities(&self) -> &[Entity] {
+        // currently stored entities
+        &self.dense
+    }
     pub fn get(&self, entity: Entity) -> Option<&T> {
         Some(self.entries.get(
             self.get_dense_index(entity)?
         )?)
+    }
+    pub fn get_many<'a, N: Iterator<Item=&'a Entity>>(&'a self, n: N) -> impl Iterator<Item=&'a T> {
+        n.filter_map(|e| self.get(*e))
     }
     // pub fn get_many(&self, e: &[IdSize]) -> Vec<&T> {
     //     // does not check if element exists!
