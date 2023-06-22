@@ -52,13 +52,7 @@ impl World {
     pub fn new() -> Self {
         World { component_storage: HashMap::new() }
     }
-    // pub fn get_component_storage<T: Display + 'static>(&self) -> Option<Ref<'_, SparseSet<T>>> {
-    //     let type_id = TypeId::of::<T>();
-    //     let storage = self.component_storage.get(&type_id)?;
-    //     let cell: &StorageCell<T> = storage.as_any().downcast_ref()?;
-    //     Some(cell.inner.borrow())
-    // }
-    pub fn get_component_storage<T: Display + 'static>(&self) -> Option<impl Deref<Target=SparseSet<T>> + '_> {
+    pub fn get_component_storage<T: Display + 'static>(&self) -> Option<Ref<SparseSet<T>>> {
         let type_id = TypeId::of::<T>();
         let storage = self.component_storage.get(&type_id)?;
         let cell: &StorageCell<T> = storage.as_any().downcast_ref()?;
