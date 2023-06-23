@@ -1,81 +1,37 @@
 use std::{
     any::Any,
-    cell::RefCell,
-    fmt::Display,
-    iter::{Filter, Map},
-    slice,
-    rc::Rc
+    cell::RefCell
 };
 
-use super::{Entity, IdSize};
+use super::component::Component;
+use super::entity::{Entity, IdSize};
 use super::errors::EntityError;
 
 const GUARD_ID: IdSize = IdSize::MAX;
 
-pub struct StorageCell<T: Display> {
-    pub inner: RefCell<SparseSet<T>>
+pub struct StorageCell<T: Component> {
+    pub inner: RefCell<ComponentSet<T>>
 }
 
 pub trait Storage {
     fn as_any(&self) -> &dyn Any;
     // fn get_display(&self, entity: Entity) -> Box<&dyn Display>;
 }
-impl<T: 'static + Display> Storage for StorageCell<T> {
+impl<T: Component + 'static> Storage for StorageCell<T> {
     fn as_any(&self) -> &dyn Any { self }
     // fn get_display(&self, entity: Entity) -> Box<&dyn Display> {
     //     Box::new(self.get(entity).unwrap())
     // }
 }
 
-pub struct EntityFilter<T> {
-    inner: T
-}
-impl EntityFilter<Box<std::slice::Iter<'_, Entity>>> {
-    pub fn from(entities: &[Entity]) -> EntityFilter<Box<dyn Iterator<Item=Entity> + '_>> {
-        EntityFilter { inner: Box::new(entities.iter().map(|e| *e)) }
-    }
-}
-impl<'a, T: Iterator<Item=Entity> + 'a> EntityFilter<T> {
-    pub fn combine(self, entities: &'a [Entity]) -> EntityFilter<Box<dyn Iterator<Item=Entity> + 'a>> {
-        EntityFilter {
-            inner: Box::new(self.inner.filter(|e| entities.contains(e)))
-        }
-    }
-}
-impl<'a, T: Iterator<Item=Entity> + 'a> Iterator for EntityFilter<T> {
-    type Item = Entity;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-}
-
-// impl EntityFilter<Box<std::slice::Iter<'_, Entity>>> {
-//     pub fn from(entities: &[Entity]) -> EntityFilter<Box<dyn Iterator<Item=&Entity> + '_>> {
-//         EntityFilter { inner: Box::new(entities.iter()) }
-//     }
-// }
-// impl<'a, T: Iterator<Item=&'a Entity> + 'a> EntityFilter<T> {
-//     pub fn combine(self, entities: &'a [Entity]) -> EntityFilter<Box<dyn Iterator<Item=&'a Entity> + 'a>> {
-//         EntityFilter {
-//             inner: Box::new(self.inner.filter(|e| entities.contains(e)))
-//         }
-//     }
-// }
-// impl<'a, T: Iterator<Item=&'a Entity> + 'a> Iterator for EntityFilter<T> {
-//     type Item = &'a Entity;
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.inner.next()
-//     }
-// }
-
-pub struct SparseSet<T: Display> {
+pub struct ComponentSet<T: Component> {
     dense: Vec<Entity>,
     sparse: Vec<IdSize>,
     entries: Vec<T>
 }
-impl<T: Display> SparseSet<T> {
+impl<T: Component> ComponentSet<T> {
     pub fn new() -> Self {
-        SparseSet { dense: Vec::new(), sparse:Vec::new (), entries: Vec::new() }
+        ComponentSet { dense: Vec::new(), sparse:Vec::new (), entries: Vec::new() }
     }
     fn get_dense_index(&self, entity: Entity) -> Option<usize> {
         let index = *(self.sparse.get(entity.id as usize)?) as usize;
@@ -135,18 +91,21 @@ impl<T: Display> SparseSet<T> {
         let idx = self.get_dense_index(entity)?;
         Some(self.entries.get_mut(idx)?)
     }
-    // pub fn get_many<'a, N: Iterator<Item=&'a Entity>>(&'a self, n: N) -> impl Iterator<Item=&'a T> {
-    //     n.filter_map(|e| self.get(*e))
-    // }
+    pub fn get_many<'a, N: Iterator<Item=&'a Entity>>(&'a self, n: N) -> impl Iterator<Item=&'a T> {
+        n.filter_map(|e| self.get(*e))
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    impl Component for String {}
+    impl Component for &str {}
+
     #[test]
     fn insert_to_empty() {
-        let mut set = SparseSet::<&str>::new();
+        let mut set = ComponentSet::<&str>::new();
         let entity = Entity { id: 0, version: 0 };
         let entry = "TEST_ENTRY";
         let res = set.insert(entity, entry);
@@ -159,7 +118,7 @@ mod tests {
     #[test]
     fn insert_unordered() {
         let count = 10;
-        let mut set = SparseSet::<String>::new();
+        let mut set = ComponentSet::<String>::new();
         for i in 0..count {
             let _ =set.insert(
                 Entity { id: i * 4, version: 0 },
@@ -180,7 +139,7 @@ mod tests {
     #[test]
     fn remove_from_middle() {
         let count = 10;
-        let mut set = SparseSet::<String>::new();
+        let mut set = ComponentSet::<String>::new();
         for i in 0..count {
             let _ =set.insert(
                 Entity { id: i * 4, version: 0 },
@@ -204,7 +163,7 @@ mod tests {
     #[test]
     fn remove_last() {
         let count = 10;
-        let mut set = SparseSet::<String>::new();
+        let mut set = ComponentSet::<String>::new();
         for i in 0..count {
             let _ =set.insert(
                 Entity { id: i * 4, version: 0 },
@@ -227,7 +186,7 @@ mod tests {
     }
     #[test]
     fn remove_only() {
-        let mut set = SparseSet::<&str>::new();
+        let mut set = ComponentSet::<&str>::new();
         let entity = Entity { id: 0, version: 0 };
         let entry = "TEST_ENTRY";
         let _ = set.insert(entity, entry);
@@ -238,13 +197,13 @@ mod tests {
     }
     #[test]
     fn remove_from_empty() {
-        let mut set = SparseSet::<&str>::new();
+        let mut set = ComponentSet::<&str>::new();
         let entity = Entity { id: 0, version: 0 };
         assert!(None == set.remove(entity));
     }
     #[test]
     fn get() {
-        let mut set = SparseSet::<&str>::new();
+        let mut set = ComponentSet::<&str>::new();
         let entity = Entity { id: 0, version: 0 };
         let entry = "TEST_ENTRY";
         let _ = set.insert(entity, entry);
@@ -252,7 +211,7 @@ mod tests {
     }
     #[test]
     fn get_not_existing() {
-        let mut set = SparseSet::<&str>::new();
+        let mut set = ComponentSet::<&str>::new();
         let entity = Entity { id: 0, version: 0 };
         let wrong_entity = Entity { id: 3, version: 0 };
         let entry = "TEST_ENTRY";
@@ -261,7 +220,7 @@ mod tests {
     }
     #[test]
     fn get_version_mismatch() {
-        let mut set = SparseSet::<&str>::new();
+        let mut set = ComponentSet::<&str>::new();
         let entity = Entity { id: 0, version: 0 };
         let wrong_entity = Entity { id: 0, version: 3 };
         let entry = "TEST_ENTRY";
