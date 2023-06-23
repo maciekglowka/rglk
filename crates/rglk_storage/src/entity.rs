@@ -27,3 +27,19 @@ impl<'a, T: Iterator<Item=Entity> + 'a> Iterator for EntityFilter<T> {
         self.inner.next()
     }
 }
+
+pub struct EntityStorage {
+    entities: Vec<Entity>
+}
+impl EntityStorage {
+    pub fn new() -> Self {
+        EntityStorage { entities: Vec::new() }
+    }
+    pub fn spawn(&mut self) -> Entity {
+        // temporary
+        let id = self.entities.len();
+        let entity = Entity { id: id as IdSize, version: 0};
+        self.entities.push(entity);
+        entity
+    }
+}

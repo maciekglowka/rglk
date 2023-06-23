@@ -1,6 +1,23 @@
 use macroquad::prelude::*;
+use std::collections::HashMap;
 
 use super::errors::AssetError;
+
+pub struct Assets {
+    pub atlases: HashMap<String, SpriteAtlas>
+}
+impl Assets {
+    pub fn new() -> Self {
+        Assets { atlases: HashMap::new() }
+    }
+}
+
+pub struct SpriteColor(pub u8, pub u8, pub u8, pub u8);
+impl From<SpriteColor> for macroquad::color::Color {
+    fn from(value: SpriteColor) -> Self {
+        macroquad::color::Color::from_rgba(value.0, value.1, value.2, value.3)
+    }
+}
 
 #[derive(Debug)]
 pub struct SpriteAtlas {
@@ -38,11 +55,17 @@ impl SpriteAtlas {
             tex, sprite_size, grid_size, grid_offset, rows, columns
         })
     }
-    pub fn draw_sprite(&self, pos: Vec2, size: Vec2, idx: u32, color: Color) {
+    pub fn draw_sprite(
+        &self,
+        pos: (f32, f32),
+        size: (f32, f32),
+        idx: u32,
+        color: SpriteColor
+    ) {
         let row = idx / self.columns;
         let col = idx % self.columns;
         let params = DrawTextureParams {
-            dest_size: Some(size),
+            dest_size: Some(Vec2::new(size.0, size.1)),
             source: Some(Rect::new(
                 col as f32 * self.grid_size.x + self.grid_offset.x,
                 row as f32 * self.grid_size.x + self.grid_offset.x,
@@ -51,6 +74,6 @@ impl SpriteAtlas {
             )),
             ..Default::default()
         };
-        draw_texture_ex(self.tex, pos.x, pos.y, color, params);
+        draw_texture_ex(self.tex, pos.0, pos.1, color.into(), params);
     }
 }

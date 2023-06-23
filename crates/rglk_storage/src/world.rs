@@ -7,17 +7,28 @@ use std::{
 use super::Storage;
 use super::component::Component;
 use super::component_storage::{ComponentSet, ComponentCell};
-use super::entity::Entity;
+use super::entity::{Entity, EntityStorage};
 use super::errors::EntityError;
 use super::resource::ResourceCell;
 
 pub struct World {
     component_storage: HashMap<TypeId, Box<dyn Storage>>,
+    entitiy_storage: EntityStorage,
     resource_storage: HashMap<TypeId, Box<dyn Storage>>,
 }
 impl World {
     pub fn new() -> Self {
-        World { component_storage: HashMap::new(), resource_storage: HashMap::new() }
+        World { 
+            component_storage: HashMap::new(),
+            resource_storage: HashMap::new(),
+            entitiy_storage: EntityStorage::new() 
+        }
+    }
+
+    // entities
+
+    pub fn spawn_entity(&mut self) -> Entity {
+        self.entitiy_storage.spawn()
     }
 
     // components

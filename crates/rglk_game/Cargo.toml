@@ -1,11 +1,9 @@
 [package]
-name = "rglk_main"
+name = "rglk_game"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rglk_sprites = { path = "../rglk_sprites" }
-
-macroquad = "0.3" 
+rglk_storage = { path = "../rglk_storage" }

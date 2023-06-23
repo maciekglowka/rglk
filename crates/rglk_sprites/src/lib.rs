@@ -1,4 +1,4 @@
 mod assets;
 pub mod errors;
 
-pub use assets::SpriteAtlas;
+pub use assets::{Assets, SpriteColor, SpriteAtlas};
