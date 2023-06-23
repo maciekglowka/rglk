@@ -44,7 +44,11 @@ fn system(a: &ComponentSet<Health>, b: &ComponentSet<Name>) {
 //     }
 // }
 struct Health(u32);
-impl Component for Health {}
+impl Component for Health {
+    fn as_str(&self) -> String {
+        format!("HP: {}", self.0)
+    }
+}
 
 struct Name(String);
 impl Component for Name {}

@@ -3,21 +3,18 @@ use std::{
     cell::RefCell
 };
 
+use super::Storage;
 use super::component::Component;
 use super::entity::{Entity, IdSize};
 use super::errors::EntityError;
 
 const GUARD_ID: IdSize = IdSize::MAX;
 
-pub struct StorageCell<T: Component> {
+pub struct ComponentCell<T: Component> {
     pub inner: RefCell<ComponentSet<T>>
 }
 
-pub trait Storage {
-    fn as_any(&self) -> &dyn Any;
-    // fn get_display(&self, entity: Entity) -> Box<&dyn Display>;
-}
-impl<T: Component + 'static> Storage for StorageCell<T> {
+impl<T: Component + 'static> Storage for ComponentCell<T> {
     fn as_any(&self) -> &dyn Any { self }
     // fn get_display(&self, entity: Entity) -> Box<&dyn Display> {
     //     Box::new(self.get(entity).unwrap())
