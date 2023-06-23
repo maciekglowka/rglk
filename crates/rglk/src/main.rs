@@ -12,15 +12,13 @@ async fn main() {
 
     let mut world = rglk_storage::World::new();
     rglk_game::init(&mut world);
+    set_camera(&Camera2D {
+        zoom: Vec2::new(2. / screen_width(), 2. / screen_height()),
+        ..Default::default()
+    });
 
-    
     loop {
         clear_background(BLACK);
-        set_camera(&Camera2D {
-            zoom: vec2(0.001, 0.001),
-            target: vec2(0.0, 0.0),
-            ..Default::default()
-        });
         rglk_graphics::board::draw_board(&world, &graphics_assets);
         next_frame().await;
 
