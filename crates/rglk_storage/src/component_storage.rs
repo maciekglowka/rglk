@@ -1,6 +1,6 @@
 use std::{
     any::Any,
-    cell::RefCell
+    cell::{Ref, RefCell}
 };
 
 use super::Storage;
@@ -10,14 +10,21 @@ use super::errors::EntityError;
 
 const GUARD_ID: IdSize = IdSize::MAX;
 
+pub trait ComponentStorage: Storage {
+    fn get_as_component(&self, entity: Entity) ->  Option<Box<Ref<dyn Component>>>;
+    fn remove_untyped(&self, entity: Entity) -> Option<Box<dyn Component>>;
+}
+
 pub struct ComponentCell<T: Component> {
     pub inner: RefCell<ComponentSet<T>>
 }
-
 impl<T: Component + 'static> Storage for ComponentCell<T> {
     fn as_any(&self) -> &dyn Any { self }
-    fn get_as_component(&self, entity: Entity) -> Option<Box<&dyn Component>> {
-        Some(Box::new(self.inner.borrow().get(entity)?))
+}
+impl<T: Component + 'static> ComponentStorage for ComponentCell<T> {
+    fn get_as_component(&self, entity: Entity) -> Option<Box<Ref<dyn Component>>> {
+        let component = Ref::filter_map(self.inner.borrow(), |a| a.get(entity)).ok()?;
+        Some(Box::new(component))
     }
     fn remove_untyped(&self, entity: Entity) -> Option<Box<dyn Component>> {
         Some(Box::new(self.inner.borrow_mut().remove(entity)?) as Box<dyn Component>)

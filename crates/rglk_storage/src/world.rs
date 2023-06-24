@@ -6,14 +6,14 @@ use std::{
 
 use super::Storage;
 use super::component::Component;
-use super::component_storage::{ComponentSet, ComponentCell};
+use super::component_storage::{ComponentSet, ComponentCell, ComponentStorage};
 use super::entity::{Entity, EntityStorage};
 use super::events::{EventBus, WorldEvent};
 use super::errors::EntityError;
 use super::resource::ResourceCell;
 
 pub struct World {
-    component_storage: HashMap<TypeId, Box<dyn Storage>>,
+    component_storage: HashMap<TypeId, Box<dyn ComponentStorage>>,
     entitiy_storage: EntityStorage,
     resource_storage: HashMap<TypeId, Box<dyn Storage>>,
     events: EventBus<WorldEvent>

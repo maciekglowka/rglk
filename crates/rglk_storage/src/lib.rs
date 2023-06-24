@@ -17,6 +17,4 @@ pub use world::World;
 
 pub trait Storage {
     fn as_any(&self) -> &dyn Any;
-    fn get_as_component(&self, entity: Entity) -> Option<Box<&dyn Component>>;
-    fn remove_untyped(&self, entity: Entity) -> Option<Box<dyn Component>>;
 }
