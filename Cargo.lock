@@ -345,11 +345,30 @@ dependencies = [
 ]
 
 [[package]]
-name = "rglk_main"
+name = "rglk"
 version = "0.1.0"
 dependencies = [
  "macroquad",
+ "rglk_game",
+ "rglk_graphics",
  "rglk_sprites",
+ "rglk_storage",
+]
+
+[[package]]
+name = "rglk_game"
+version = "0.1.0"
+dependencies = [
+ "rglk_storage",
+]
+
+[[package]]
+name = "rglk_graphics"
+version = "0.1.0"
+dependencies = [
+ "rglk_game",
+ "rglk_sprites",
+ "rglk_storage",
 ]
 
 [[package]]

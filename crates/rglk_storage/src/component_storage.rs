@@ -16,9 +16,12 @@ pub struct ComponentCell<T: Component> {
 
 impl<T: Component + 'static> Storage for ComponentCell<T> {
     fn as_any(&self) -> &dyn Any { self }
-    // fn get_display(&self, entity: Entity) -> Box<&dyn Display> {
-    //     Box::new(self.get(entity).unwrap())
-    // }
+    fn get_as_component(&self, entity: Entity) -> Option<Box<&dyn Component>> {
+        Some(Box::new(self.inner.borrow().get(entity)?))
+    }
+    fn remove_untyped(&self, entity: Entity) -> Option<Box<dyn Component>> {
+        Some(Box::new(self.inner.borrow_mut().remove(entity)?) as Box<dyn Component>)
+    }
 }
 
 pub struct ComponentSet<T: Component> {

@@ -8,6 +8,7 @@ use super::Storage;
 use super::component::Component;
 use super::component_storage::{ComponentSet, ComponentCell};
 use super::entity::{Entity, EntityStorage};
+use super::events::{EventBus, WorldEvent};
 use super::errors::EntityError;
 use super::resource::ResourceCell;
 
@@ -15,13 +16,15 @@ pub struct World {
     component_storage: HashMap<TypeId, Box<dyn Storage>>,
     entitiy_storage: EntityStorage,
     resource_storage: HashMap<TypeId, Box<dyn Storage>>,
+    events: EventBus<WorldEvent>
 }
 impl World {
     pub fn new() -> Self {
         World { 
             component_storage: HashMap::new(),
             resource_storage: HashMap::new(),
-            entitiy_storage: EntityStorage::new() 
+            entitiy_storage: EntityStorage::new(),
+            events: EventBus::new()
         }
     }
 
@@ -29,6 +32,14 @@ impl World {
 
     pub fn spawn_entity(&mut self) -> Entity {
         self.entitiy_storage.spawn()
+    }
+    pub fn despawn_entity(&mut self, entity: Entity) {
+        self.entitiy_storage.despawn(entity);
+        for (type_id, storage) in self.component_storage.iter() {
+            if storage.remove_untyped(entity).is_some() {
+                self.events.publish(WorldEvent::ComponentRemoved(entity, *type_id))
+            }
+        }
     }
 
     // components
@@ -59,8 +70,18 @@ impl World {
         if !self.component_storage.contains_key(&type_id) {
             self.insert_component_storage::<T>()
         }
-        self.get_component_set_mut()
-            .ok_or(EntityError)?.insert(entity, component)
+        let res = self.get_component_set_mut()
+            .ok_or(EntityError)?
+            .insert(entity, component);
+        if res.is_ok() { self.events.publish(WorldEvent::ComponentSpawned(entity, type_id)) }
+        res
+    }
+    pub fn remove_component<T: Component + 'static>(&mut self, entity: Entity) -> Option<T> {
+        let type_id = TypeId::of::<T>();
+        let res = self.get_component_set_mut()?
+            .remove(entity);
+        if res.is_some() { self.events.publish(WorldEvent::ComponentRemoved(entity, type_id)) }
+        res
     }
 
     // resources

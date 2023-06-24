@@ -42,4 +42,8 @@ impl EntityStorage {
         self.entities.push(entity);
         entity
     }
+    pub fn despawn(&mut self, entity: Entity) {
+        // temporary -> TODO: recycling
+        self.entities.retain(|&e| e != entity);
+    }
 }
