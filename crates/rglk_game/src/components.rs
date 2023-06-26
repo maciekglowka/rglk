@@ -1,8 +1,8 @@
 use::rglk_storage::Component;
 
-use crate::vectors::Vector2Int;
+use rglk_math::vectors::Vector2I;
 
-pub struct Position(pub Vector2Int);
+pub struct Position(pub Vector2I);
 impl Component for Position {}
 
 pub struct Tile;

@@ -1,6 +1,8 @@
 use macroquad::prelude::*;
 use std::collections::HashMap;
 
+use rglk_math::vectors::Vector2F;
+
 use super::errors::AssetError;
 
 pub struct Assets {
@@ -57,15 +59,15 @@ impl SpriteAtlas {
     }
     pub fn draw_sprite(
         &self,
-        pos: (f32, f32),
-        size: (f32, f32),
+        pos: Vector2F,
+        size: Vector2F,
         idx: u32,
         color: SpriteColor
     ) {
         let row = idx / self.columns;
         let col = idx % self.columns;
         let params = DrawTextureParams {
-            dest_size: Some(Vec2::new(size.0, size.1)),
+            dest_size: Some(Vec2::new(size.x, size.y)),
             source: Some(Rect::new(
                 col as f32 * self.grid_size.x + self.grid_offset.x,
                 row as f32 * self.grid_size.x + self.grid_offset.x,
@@ -74,6 +76,6 @@ impl SpriteAtlas {
             )),
             ..Default::default()
         };
-        draw_texture_ex(self.tex, pos.0, pos.1, color.into(), params);
+        draw_texture_ex(self.tex, pos.x, pos.y, color.into(), params);
     }
 }

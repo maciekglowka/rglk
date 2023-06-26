@@ -4,11 +4,12 @@ use std::{
     collections::HashMap,
 };
 
-use super::Storage;
+use rglk_events::EventBus;
+
+use super::{Storage, WorldEvent};
 use super::component::Component;
 use super::component_storage::{ComponentSet, ComponentCell, ComponentStorage};
 use super::entity::{Entity, EntityStorage};
-use super::events::{EventBus, WorldEvent};
 use super::errors::EntityError;
 use super::resource::ResourceCell;
 
@@ -16,7 +17,7 @@ pub struct World {
     component_storage: HashMap<TypeId, Box<dyn ComponentStorage>>,
     entitiy_storage: EntityStorage,
     resource_storage: HashMap<TypeId, Box<dyn Storage>>,
-    events: EventBus<WorldEvent>
+    pub events: EventBus<WorldEvent>
 }
 impl World {
     pub fn new() -> Self {
@@ -65,7 +66,11 @@ impl World {
             Box::new(storage)
         );
     }
-    pub fn insert_component<T: Component + 'static>(&mut self, entity: Entity, component: T) -> Result<(), EntityError> {
+    pub fn insert_component<T: Component + 'static>(
+        &mut self,
+        entity: Entity,
+        component: T
+    ) -> Result<(), EntityError> {
         let type_id = TypeId::of::<T>();
         if !self.component_storage.contains_key(&type_id) {
             self.insert_component_storage::<T>()

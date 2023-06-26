@@ -1,3 +1,32 @@
 pub mod assets;
+mod renderers;
 mod globals;
-pub mod board;
+
+use rglk_game::components::Position;
+use rglk_events::SubscriberHandle;
+use rglk_storage::{World, WorldEvent};
+
+pub struct GraphicsState {
+    pub assets: rglk_sprites::Assets,
+    // TODO use sparse storage ?
+    pub sprites: Vec<renderers::SpriteRenderer>,
+    pub ev_world: SubscriberHandle<WorldEvent>
+}
+impl GraphicsState {
+    pub fn new(world: &mut World, assets: rglk_sprites::Assets) -> Self {
+        GraphicsState { 
+            assets: assets,
+            sprites: Vec::new(),
+            ev_world: world.events.subscribe()
+        }
+    }
+}
+
+pub fn graphics_update(
+    world: &World,
+    state: &mut GraphicsState
+) {
+    let positions = world.get_component_set::<Position>().unwrap();
+    renderers::spawn_sprites(&positions, state);
+    renderers::draw_sprites(state);
+}

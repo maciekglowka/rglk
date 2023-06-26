@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
+use rglk_math::vectors::Vector2I;
 use::rglk_storage::Entity;
 
-use crate::vectors::Vector2Int;
 pub struct Board {
-    pub tiles: HashMap<Vector2Int, Entity>
+    pub tiles: HashMap<Vector2I, Entity>
 }
 impl Board {
     pub fn new() -> Self {

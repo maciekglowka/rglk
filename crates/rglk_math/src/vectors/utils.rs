@@ -4,14 +4,14 @@ use std::{
     collections::{BinaryHeap, HashMap, HashSet, VecDeque}
 };
 
-use super::{ORTHO_DIRECTIONS, Vector2Int};
+use super::vector2::{ORTHO_DIRECTIONS, Vector2I};
 
 pub fn find_path(
-    start: Vector2Int,
-    end: Vector2Int,
-    tiles: &HashSet<Vector2Int>,
-    blockers: &HashSet<Vector2Int>
-) -> Option<VecDeque<Vector2Int>> {
+    start: Vector2I,
+    end: Vector2I,
+    tiles: &HashSet<Vector2I>,
+    blockers: &HashSet<Vector2I>
+) -> Option<VecDeque<Vector2I>> {
     
     let mut queue = BinaryHeap::new();
     queue.push(Node { v: start, cost: 0});
@@ -50,7 +50,7 @@ pub fn find_path(
 // helper struct for the path finder
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct Node {
-    pub v: Vector2Int,
+    pub v: Vector2I,
     pub cost: u32
 }
 
