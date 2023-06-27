@@ -12,7 +12,7 @@ async fn main() {
 
     let mut world = rglk_storage::World::new();
     set_camera(&Camera2D {
-        zoom: Vec2::new(2. / screen_width(), 2. / screen_height()),
+        zoom: Vec2::new(2. / screen_width(), -2. / screen_height()),
         ..Default::default()
     });
     let mut graphics_state = rglk_graphics::GraphicsState::new(

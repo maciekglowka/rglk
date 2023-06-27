@@ -14,6 +14,7 @@ impl Assets {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct SpriteColor(pub u8, pub u8, pub u8, pub u8);
 impl From<SpriteColor> for macroquad::color::Color {
     fn from(value: SpriteColor) -> Self {

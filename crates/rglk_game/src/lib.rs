@@ -24,4 +24,8 @@ pub fn init(world: &mut World) {
     }
 
     world.insert_resource::<Board>(board);
+
+    let npc = world.spawn_entity();
+    let _ = world.insert_component::<components::Position>(npc, components::Position(Vector2I::new(0, 0)));
+    let _ = world.insert_component::<components::Piece>(npc, components::Piece);
 }
