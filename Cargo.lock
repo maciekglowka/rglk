@@ -351,6 +351,7 @@ dependencies = [
  "macroquad",
  "rglk_game",
  "rglk_graphics",
+ "rglk_math",
  "rglk_sprites",
  "rglk_storage",
 ]

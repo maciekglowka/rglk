@@ -45,6 +45,16 @@ pub fn spawn_sprites(
     }
 }
 
+pub fn update_sprites(
+    positions: &ComponentSet<Position>,
+    state: &mut GraphicsState
+) {
+    for sprite in state.sprites.iter_mut() {
+        let Some(position) = positions.get(sprite.entity) else { continue };
+        sprite.v = position.0.as_f32() * TILE_SIZE;
+    }
+}
+
 pub fn draw_sprites(state: &GraphicsState) {
     for sprite in state.sprites.iter() {
         let Some(atlas) = state.assets.atlases.get(&sprite.atlas_name) else { continue };

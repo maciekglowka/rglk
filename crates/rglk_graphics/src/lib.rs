@@ -33,5 +33,6 @@ pub fn graphics_update(
     let pieces = world.get_component_set::<Piece>().unwrap();
     let tiles = world.get_component_set::<Tile>().unwrap();
     renderers::spawn_sprites(&positions, &pieces, &tiles, state);
+    renderers::update_sprites(&positions, state);
     renderers::draw_sprites(state);
 }
