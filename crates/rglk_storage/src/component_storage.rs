@@ -1,6 +1,7 @@
 use std::{
     any::Any,
-    cell::{Ref, RefCell}
+    cell::{Ref, RefCell},
+    collections::HashSet
 };
 
 use super::Storage;
@@ -88,6 +89,9 @@ impl<T: Component> ComponentSet<T> {
     pub fn entities(&self) -> &[Entity] {
         // currently stored entities
         &self.dense
+    }
+    pub fn hashset(&self) -> HashSet<Entity> {
+        HashSet::from_iter(self.dense.iter().map(|e| *e))
     }
     pub fn one(&self) -> Option<&T> {
         // returns a component if one and only one instance exists

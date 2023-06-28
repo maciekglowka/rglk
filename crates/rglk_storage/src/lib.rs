@@ -6,11 +6,12 @@ mod component;
 mod component_storage;
 mod entity;
 mod errors;
+pub mod query;
 mod resource;
 mod world;
 
 pub use component::Component;
-pub use entity::{Entity, EntityFilter};
+pub use entity::Entity;
 pub use component_storage::ComponentSet;
 pub use world::World;
 

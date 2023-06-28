@@ -11,6 +11,7 @@ use super::component::Component;
 use super::component_storage::{ComponentSet, ComponentCell, ComponentStorage};
 use super::entity::{Entity, EntityStorage};
 use super::errors::EntityError;
+use super::query::EntityQuery;
 use super::resource::ResourceCell;
 
 pub struct World {
@@ -110,5 +111,11 @@ impl World {
             type_id,
             Box::new(storage)
         );
+    }
+
+    // query
+
+    pub fn query<T: 'static + Component>(&self) -> EntityQuery {
+        EntityQuery::new::<T>(self)
     }
 }

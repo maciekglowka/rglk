@@ -41,33 +41,33 @@ fn handle_input(
     players: &rglk_storage::ComponentSet<rglk_game::components::Player>,
     actors: &mut rglk_storage::ComponentSet<rglk_game::components::Actor>
 ) {
-    let Some(entity) = rglk_storage::EntityFilter::from(players.entities())
-        .combine(actors.entities())
-        .next()
-        else { return };
-    let Some(actor) = actors.get_mut(entity) else { return };
-    let mut action = None;
-    if is_key_down(KeyCode::A) {
-        action = Some(rglk_game::actions::Walk{
-            entity, direction: rglk_math::vectors::Vector2I::new(-1, 0)
-        });
-    }
-    if is_key_down(KeyCode::D) {
-        action = Some(rglk_game::actions::Walk{
-            entity, direction: rglk_math::vectors::Vector2I::new(1, 0)
-        });
-    }
-    if is_key_down(KeyCode::W) {
-        action = Some(rglk_game::actions::Walk{
-            entity, direction: rglk_math::vectors::Vector2I::new(0, -1)
-        });
-    }
-    if is_key_down(KeyCode::S) {
-        action = Some(rglk_game::actions::Walk{
-            entity, direction: rglk_math::vectors::Vector2I::new(0, 1)
-        });
-    }
-    if let Some(action) = action {
-        actor.next = Some(Box::new(action));
-    }
+    // let Some(entity) = rglk_storage::EntityFilter::from(players.entities())
+    //     .combine(actors.entities())
+    //     .next()
+    //     else { return };
+    // let Some(actor) = actors.get_mut(entity) else { return };
+    // let mut action = None;
+    // if is_key_down(KeyCode::A) {
+    //     action = Some(rglk_game::actions::Walk{
+    //         entity, direction: rglk_math::vectors::Vector2I::new(-1, 0)
+    //     });
+    // }
+    // if is_key_down(KeyCode::D) {
+    //     action = Some(rglk_game::actions::Walk{
+    //         entity, direction: rglk_math::vectors::Vector2I::new(1, 0)
+    //     });
+    // }
+    // if is_key_down(KeyCode::W) {
+    //     action = Some(rglk_game::actions::Walk{
+    //         entity, direction: rglk_math::vectors::Vector2I::new(0, -1)
+    //     });
+    // }
+    // if is_key_down(KeyCode::S) {
+    //     action = Some(rglk_game::actions::Walk{
+    //         entity, direction: rglk_math::vectors::Vector2I::new(0, 1)
+    //     });
+    // }
+    // if let Some(action) = action {
+    //     actor.next = Some(Box::new(action));
+    // }
 }

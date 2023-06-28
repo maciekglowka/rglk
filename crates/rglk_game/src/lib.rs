@@ -8,20 +8,22 @@ pub mod components;
 pub use board::Board;
 
 pub fn game_step(world: &mut World) {
-    // only player for now
-    let Some(players) = world.get_component_set::<components::Player>()
-        else { return };
-    let Some(player_entity) = players.one_entity() else { return };
-    let Some(mut actors) = world.get_component_set_mut::<components::Actor>()
-        else { return };
-    let Some(actor) = actors.get_mut(*player_entity) else { return };
-    let action = match actor.next.take() {
-        Some(a) => a,
-        _ => return
-    };
-    drop(players);
-    drop(actors);
-    action.execute(world);
+    // let Some(mut actors) = world.get_component_set_mut::<components::Actor>()
+    //     else { return };
+    // let Some(entity) = rglk_storage::query::EntityFilter::from::<components::Player>(&world)
+    //     .combine::<components::Actor>()
+    //     .iter()
+    //     .map(|e| *e)
+    //     .next()
+    //     else { return };
+
+    // let Some(actor) = actors.get_mut(entity) else { return };
+    // let action = match actor.next.take() {
+    //     Some(a) => a,
+    //     _ => return
+    // };
+    // drop(actors);
+    // action.execute(world);
 }
 
 pub fn init(world: &mut World) {
