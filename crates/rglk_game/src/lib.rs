@@ -3,41 +3,24 @@ use::rglk_storage::World;
 
 pub mod actions;
 mod board;
+pub mod globals;
 pub mod components;
 
 pub use board::Board;
 
 pub fn game_step(world: &mut World) {
-    // let Some(mut actors) = world.get_component_set_mut::<components::Actor>()
-    //     else { return };
-    // let Some(entity) = rglk_storage::query::EntityFilter::from::<components::Player>(&world)
-    //     .combine::<components::Actor>()
-    //     .iter()
-    //     .map(|e| *e)
-    //     .next()
-    //     else { return };
-
-    // let Some(actor) = actors.get_mut(entity) else { return };
-    // let action = match actor.next.take() {
-    //     Some(a) => a,
-    //     _ => return
-    // };
-    // drop(actors);
-    // action.execute(world);
+    let query = world.query::<components::Player>().with::<components::Actor>();
+    let action = match query.iter().next() {
+        Some(item) => item.get_mut::<components::Actor>().unwrap().next.take(),
+        None => return
+    };
+    if let Some(action) = action {
+        action.execute(world);
+    }
 }
 
 pub fn init(world: &mut World) {
-    let mut board = board::Board::new();
-
-    for x in 0..8 {
-        for y in 0..8 {
-            let v = Vector2I::new(x, y);
-            let entity = world.spawn_entity();
-            let _ = world.insert_component::<components::Position>(entity, components::Position(v));
-            let _ = world.insert_component::<components::Tile>(entity, components::Tile);
-            board.tiles.insert(v, entity);
-        }
-    }
+    let board = board::generate_board(world);
 
     world.insert_resource::<Board>(board);
 

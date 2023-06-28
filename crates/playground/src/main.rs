@@ -82,7 +82,7 @@ fn system(world: &World, a: &ComponentSet<Health>, b: &ComponentSet<Name>) {
     for e in world.query::<Health>().with::<Name>().iter() {
         // s += a.get(e.entity).unwrap().0;
         // b.get(e.entity);
-        s += e.get::<Health>().0;
+        s += e.get::<Health>().unwrap().0;
         e.get::<Name>();
     }
 }

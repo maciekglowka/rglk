@@ -9,6 +9,7 @@ pub struct Actor {
 }
 impl Component for Actor {}
 
+
 pub struct Piece;
 impl Component for Piece {}
 

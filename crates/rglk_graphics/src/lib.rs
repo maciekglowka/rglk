@@ -1,6 +1,6 @@
 pub mod assets;
 mod renderers;
-mod globals;
+pub mod globals;
 
 use rglk_game::components::{Piece, Position, Tile};
 use rglk_events::SubscriberHandle;

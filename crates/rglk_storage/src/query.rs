@@ -50,14 +50,16 @@ pub struct EntityQueryItem<'a> {
     world: &'a World
 }
 impl<'a> EntityQueryItem<'a> {
-    pub fn get<T: 'static + Component>(&self) -> Ref<'_, T> {
+    // get and get_mut does not check at the moment
+    // if the requested type was part of the query
+    pub fn get<T: 'static + Component>(&self) -> Option<Ref<'_, T>> {
         // TODO avoid retrieving the set each time?
-        let set = self.world.get_component_set::<T>().unwrap();
-        Ref::map(set, |s| s.get(self.entity).unwrap())
+        let set = self.world.get_component_set::<T>()?;
+        Ref::filter_map(set, |s| s.get(self.entity)).ok()
     }
-    pub fn get_mut<T: 'static + Component>(&self) -> RefMut<'_, T> {
+    pub fn get_mut<T: 'static + Component>(&self) -> Option<RefMut<'_, T>> {
         // TODO avoid retrieving the set each time?
-        let set = self.world.get_component_set_mut::<T>().unwrap();
-        RefMut::map(set, |s| s.get_mut(self.entity).unwrap())
+        let set = self.world.get_component_set_mut::<T>()?;
+        RefMut::filter_map(set, |s| s.get_mut(self.entity)).ok()
     }
 }

@@ -93,16 +93,16 @@ impl<T: Component> ComponentSet<T> {
     pub fn hashset(&self) -> HashSet<Entity> {
         HashSet::from_iter(self.dense.iter().map(|e| *e))
     }
-    pub fn one(&self) -> Option<&T> {
-        // returns a component if one and only one instance exists
-        if self.dense.len() != 1 { return None }
-        self.entries.get(0)
-    }
-    pub fn one_entity(&self) -> Option<&Entity> {
-        // returns an entity if one and only one instance exists
-        if self.dense.len() != 1 { return None }
-        self.dense.get(0)
-    }
+    // pub fn one(&self) -> Option<&T> {
+    //     // returns a component if one and only one instance exists
+    //     if self.dense.len() != 1 { return None }
+    //     self.entries.get(0)
+    // }
+    // pub fn one_entity(&self) -> Option<&Entity> {
+    //     // returns an entity if one and only one instance exists
+    //     if self.dense.len() != 1 { return None }
+    //     self.dense.get(0)
+    // }
     pub fn get(&self, entity: Entity) -> Option<&T> {
         Some(self.entries.get(
             self.get_dense_index(entity)?
