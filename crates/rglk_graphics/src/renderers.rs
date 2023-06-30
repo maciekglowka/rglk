@@ -1,12 +1,12 @@
 use std::any::TypeId;
 
-use rglk_game::components::{Piece, Position, Tile};
+use rglk_game::components::{Actor, Fixture, Name, Position, Tile};
 use rglk_math::vectors::Vector2F;
 use rglk_sprites::{Assets, SpriteColor};
 use rglk_storage::{ComponentSet, Entity, World, WorldEvent};
 
 use super::GraphicsState;
-use crate::globals::TILE_SIZE;
+use crate::globals::{TILE_SIZE, ACTOR_Z, FIXTURE_Z, TILE_Z};
 
 pub struct SpriteRenderer {
     pub entity: Entity,
@@ -18,9 +18,7 @@ pub struct SpriteRenderer {
 }
 
 pub fn spawn_sprites(
-    positions: &ComponentSet<Position>,
-    pieces: &ComponentSet<Piece>,
-    tiles: &ComponentSet<Tile>,
+    world: &World,
     state: &mut GraphicsState
 ) {
     let mut updated = false;
@@ -30,10 +28,8 @@ pub fn spawn_sprites(
                 if *type_id != TypeId::of::<Position>() {
                     continue;
                 }
-                let p = positions.get(*entity).unwrap();
-
                 state.sprites.push(
-                    get_sprite_renderer(*entity, p, pieces, tiles)
+                    get_sprite_renderer(*entity, world)
                 );
                 updated = true;
             },
@@ -69,22 +65,34 @@ pub fn draw_sprites(state: &GraphicsState) {
 
 fn get_sprite_renderer(
     entity: Entity,
-    position: &Position,
-    pieces: &ComponentSet<Piece>,
-    tiles: &ComponentSet<Tile>,
+    world: &World,
 ) -> SpriteRenderer {
-    let mut index = 0;
     let mut z_index = 0;
-    let mut color = SpriteColor(0, 0, 0, 0);
-    if tiles.get(entity).is_some() {
-        index = 177;
-        z_index = 10;
-        color = SpriteColor(100, 100, 100, 255);
-    } else if pieces.get(entity).is_some() {
-        index = 2;
-        z_index = 100;
-        color = SpriteColor(255, 0, 255, 255);
+
+    let position = world.get_component::<Position>(entity).unwrap();
+    let name = world.get_component::<Name>(entity).unwrap();
+
+    if world.get_component::<Fixture>(entity).is_some() {
+        z_index = FIXTURE_Z
+    } else if world.get_component::<Tile>(entity).is_some() {
+        z_index = TILE_Z
+    } else if world.get_component::<Actor>(entity).is_some() {
+        z_index = ACTOR_Z
     }
+
+    let index = match name.0.as_str() {
+        "Player" => 2,
+        "Link" => 10,
+        "Tile" => 177,
+        _ => 0
+    };
+    let color = match name.0.as_str() {
+        "Player" => SpriteColor(255, 0, 255, 255),
+        "Link" => SpriteColor(0, 0, 255, 255),
+        "Tile" => SpriteColor(100, 100, 100, 255),
+        _ => SpriteColor(0, 0, 0, 0) 
+    };
+
     SpriteRenderer { 
         entity: entity,
         v: position.0.as_f32() * TILE_SIZE,

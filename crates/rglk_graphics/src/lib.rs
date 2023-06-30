@@ -1,8 +1,9 @@
 pub mod assets;
 mod renderers;
 pub mod globals;
+mod ui;
 
-use rglk_game::components::{Piece, Position, Tile};
+use rglk_game::components::{Position};
 use rglk_events::SubscriberHandle;
 use rglk_storage::{World, WorldEvent};
 
@@ -29,10 +30,17 @@ pub fn graphics_update(
     world: &World,
     state: &mut GraphicsState
 ) {
-    let positions = world.get_component_set::<Position>().unwrap();
-    let pieces = world.get_component_set::<Piece>().unwrap();
-    let tiles = world.get_component_set::<Tile>().unwrap();
-    renderers::spawn_sprites(&positions, &pieces, &tiles, state);
-    renderers::update_sprites(&positions, state);
+    renderers::spawn_sprites(world, state);
+    renderers::update_sprites(
+        &world.get_component_set::<Position>().unwrap(),
+        state
+    );
     renderers::draw_sprites(state);
+}
+
+pub fn ui_update(
+    world: &World,
+    state: &mut GraphicsState   
+) {
+    ui::draw_wind_queue(world, state);
 }

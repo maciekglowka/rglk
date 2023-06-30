@@ -26,11 +26,11 @@ async fn main() {
     rglk_graphics::assets::load_assets(&mut graphics_assets).await;
 
     let mut world = rglk_storage::World::new();
-    set_camera(&Camera2D {
+    let main_camera = Camera2D {
         zoom: Vec2::new(2. / screen_width(), -2. / screen_height()),
-        target: 0.5 * rglk_graphics::globals::TILE_SIZE * Vec2::splat(rglk_game::globals::CHUNK_SIZE as f32),
+        target: 0.5 * rglk_graphics::globals::TILE_SIZE * Vec2::splat(8.),
         ..Default::default()
-    });
+    };
     let mut graphics_state = rglk_graphics::GraphicsState::new(
         &mut world,
         graphics_assets
@@ -44,7 +44,7 @@ async fn main() {
         if let Some(action) = get_input_action() {
             last_action = Some(action)
         };
-        if last_input.elapsed() > Duration::from_millis(100) {
+        if last_input.elapsed() > Duration::from_millis(200) {
             handle_input(last_action, &world);
             last_input = Instant::now();
             last_action = None;
@@ -52,7 +52,10 @@ async fn main() {
 
         rglk_game::game_step(&mut world);
         clear_background(BLACK);
+        set_camera(&main_camera);
         rglk_graphics::graphics_update(&world, &mut graphics_state);
+        set_default_camera();
+        rglk_graphics::ui_update(&world, &mut graphics_state);
         next_frame().await;
 
         // temp to save some cpu cycles
@@ -69,7 +72,7 @@ fn handle_input(
             let query = world.query::<rglk_game::components::Player>()
                 .with::<rglk_game::components::Actor>();
             if let Some(item) = query.iter().next() {
-                let action = rglk_game::actions::Walk{
+                let action = rglk_game::actions::Sail{
                     entity: item.entity, direction: dir
                 };
                 item.get_mut::<rglk_game::components::Actor>().unwrap().next = Some(Box::new(action));

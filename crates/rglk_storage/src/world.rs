@@ -89,6 +89,14 @@ impl World {
         if res.is_some() { self.events.publish(WorldEvent::ComponentRemoved(entity, type_id)) }
         res
     }
+    pub fn get_component<T: Component + 'static>(&self, entity: Entity) -> Option<Ref<T>> {
+        let set = self.get_component_set::<T>()?;
+        Ref::filter_map(set, |s| s.get(entity)).ok()
+    }
+    pub fn get_component_mut<T: Component + 'static>(&self, entity: Entity) -> Option<RefMut<T>> {
+        let set = self.get_component_set_mut::<T>()?;
+        RefMut::filter_map(set, |s| s.get_mut(entity)).ok()
+    }
 
     // resources
 
@@ -100,7 +108,7 @@ impl World {
     }
     pub fn get_resource_mut<T: 'static>(&self) -> Option<RefMut<T>> {
         let type_id = TypeId::of::<T>();
-        let storage = self.component_storage.get(&type_id)?;
+        let storage = self.resource_storage.get(&type_id)?;
         let cell: &ResourceCell<T> = storage.as_any().downcast_ref()?;
         Some(cell.inner.borrow_mut())
     }

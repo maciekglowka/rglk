@@ -1,4 +1,4 @@
-use::rglk_storage::Component;
+use::rglk_storage::{Component, Entity};
 
 use rglk_math::vectors::Vector2I;
 
@@ -9,9 +9,12 @@ pub struct Actor {
 }
 impl Component for Actor {}
 
+// fixed tile furnishings
+pub struct Fixture;
+impl Component for Fixture {}
 
-pub struct Piece;
-impl Component for Piece {}
+pub struct Name (pub String);
+impl Component for Name {}
 
 pub struct Player;
 impl Component for Player {}
