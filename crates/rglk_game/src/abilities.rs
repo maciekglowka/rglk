@@ -8,7 +8,7 @@ use rglk_storage::{Entity, World};
 
 use super::actions::{Action, Travel};
 use super::board::Board;
-use super::components::Position;
+use super::components::{Blocker, Position};
 use super::wind::Wind;
 
 pub trait Ability {
@@ -49,10 +49,9 @@ impl Sailing {
         world: &World
     ) -> Option<Vector2I> {
         // gets a furthest possible valid tile at a sailing direction
-        let board = world.get_resource::<Board>()?;
         for d in (1..=dist).rev() {
             let v = source + dir * d;
-            if board.tiles.contains_key(&v) { return Some(v) }
+            if is_tile_traversible(v, world) { return Some(v) }
         }
         None
     }
@@ -63,15 +62,24 @@ impl Ability for Rowing {
     fn get_possible_actions(&self, entity: Entity, world: &World) -> HashMap<Vector2I, Box<dyn Action>> {
         let mut output = HashMap::new();
         let Some(position) = world.get_component::<Position>(entity) else { return output };
-        let Some(board) = world.get_resource::<Board>() else { return output };
 
         for dir in ORTHO_DIRECTIONS {
             let target = position.0 + dir;
-            if board.tiles.contains_key(&target) {
+            if is_tile_traversible(target, world) {
                 output.insert(dir, Box::new(Travel { entity, target }));
             }
         }
+        output.insert(Vector2I::ZERO, Box::new(Travel { entity, target: position.0 }));
 
         output
     }
+}
+
+fn is_tile_traversible(v: Vector2I, world: &World) -> bool {
+    let Some(board) = world.get_resource::<Board>() else { return false };
+    if !board.tiles.contains_key(&v) { return false }
+    for item in world.query::<Position>().with::<Blocker>().iter() {
+        if item.get::<Position>().unwrap().0 == v { return false };
+    }
+    true
 }

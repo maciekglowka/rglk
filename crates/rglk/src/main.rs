@@ -41,26 +41,27 @@ async fn main() {
     rglk_game::init(&mut world);
 
     let mut last_input = Instant::now();
-    let mut last_action = None;
+    // let mut last_action = None;
+    let mut graphics_ready = true;
 
     loop {
-        if let Some(action) = get_input_action() {
-            last_action = Some(action)
-        };
+        if last_input.elapsed() > Duration::from_millis(200) {
+            if let Some(action) = get_input_action() {
+                handle_input(Some(action), &world);
+                last_input = Instant::now();
+            };
+        }
 
-        rglk_game::game_step(&mut world);
+        if graphics_ready {
+            rglk_game::game_step(&mut world);
+        }
         clear_background(BLACK);
         set_camera(&main_camera);
-        let graphics_ready = rglk_graphics::graphics_update(&world, &mut graphics_state);
+        graphics_ready = rglk_graphics::graphics_update(&world, &mut graphics_state);
         set_default_camera();
         rglk_graphics::ui_update(&world, &mut graphics_state);
         next_frame().await;
 
-        if graphics_ready && last_input.elapsed() > Duration::from_millis(200) {
-            handle_input(last_action, &world);
-            last_input = Instant::now();
-            last_action = None;
-        }
 
         // temp to save some cpu cycles
         std::thread::sleep(std::time::Duration::from_millis(20));

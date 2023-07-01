@@ -30,3 +30,8 @@ impl Action for Travel {
         20 - self.target.manhattan(pos.0)
     }
 }
+
+pub struct Pause;
+impl Action for Pause {
+    fn execute(&self, world: &mut World) {}
+}

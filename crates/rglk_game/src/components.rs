@@ -11,6 +11,10 @@ pub struct Actor {
 }
 impl Component for Actor {}
 
+// actor cannot travel to a blocked tile
+pub struct Blocker;
+impl Component for Blocker {}
+
 pub struct Card(pub Box<dyn Ability>);
 impl Component for Card {}
 

@@ -2,7 +2,7 @@
 
 use::rglk_storage::{Entity, World};
 
-use super::actions::{Action, ActorQueue};
+use super::actions::{Action, ActorQueue, Pause};
 use super::components::{Actor, Card, Player, Position};
 use super::wind::Wind;
 
@@ -36,6 +36,7 @@ fn get_action(entity: Entity, world: &mut World) -> Option<Box<dyn Action>> {
     if let Some(action) = actor.action.take() { return Some(action) };
     if world.get_component::<Player>(entity).is_some() { return None };
 
+    // choose npcs actions
     let mut possible_actions = actor.cards.iter()
         .filter_map(|e| world.get_component::<Card>(*e))
         .map(|c| c.0.get_possible_actions(entity, world).drain().collect::<Vec<_>>())
@@ -44,7 +45,10 @@ fn get_action(entity: Entity, world: &mut World) -> Option<Box<dyn Action>> {
         .collect::<Vec<_>>();
 
     possible_actions.sort_by(|a, b| a.score(world).cmp(&b.score(world)));
-    possible_actions.pop()
+    match possible_actions.pop() {
+        Some(a) => Some(a),
+        _ => Some(Box::new(Pause))
+    }
 }
 
 fn collect_actor_queue(world: &mut World) {

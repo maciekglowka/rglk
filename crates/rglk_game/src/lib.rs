@@ -34,6 +34,7 @@ pub fn init(world: &mut World) {
     let player = world.spawn_entity();
     let _ = world.insert_component(player, components::Position(Vector2I::new(0, 0)));
     let _ = world.insert_component(player, components::Name("Player".into()));
+    let _ = world.insert_component(player, components::Blocker);
     let _ = world.insert_component(player, components::Player{
         active_card: 0
     });
@@ -50,6 +51,7 @@ pub fn init(world: &mut World) {
     let npc = world.spawn_entity();
     let _ = world.insert_component(npc, components::Position(Vector2I::new(5, 5)));
     let _ = world.insert_component(npc, components::Name("Rowers".into()));
+    let _ = world.insert_component(npc, components::Blocker);
     let _ = world.insert_component(npc, components::Actor { 
         cards: vec![rowers_card],
         action: None
