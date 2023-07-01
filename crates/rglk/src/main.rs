@@ -1,5 +1,8 @@
 use macroquad::prelude::*;
-use std::time::{Duration, Instant};
+use std::{
+    collections:: HashMap,
+    time::{Duration, Instant}
+};
 
 use rglk_game;
 use rglk_graphics;
@@ -44,19 +47,20 @@ async fn main() {
         if let Some(action) = get_input_action() {
             last_action = Some(action)
         };
-        if last_input.elapsed() > Duration::from_millis(200) {
-            handle_input(last_action, &world);
-            last_input = Instant::now();
-            last_action = None;
-        }
 
         rglk_game::game_step(&mut world);
         clear_background(BLACK);
         set_camera(&main_camera);
-        rglk_graphics::graphics_update(&world, &mut graphics_state);
+        let graphics_ready = rglk_graphics::graphics_update(&world, &mut graphics_state);
         set_default_camera();
         rglk_graphics::ui_update(&world, &mut graphics_state);
         next_frame().await;
+
+        if graphics_ready && last_input.elapsed() > Duration::from_millis(200) {
+            handle_input(last_action, &world);
+            last_input = Instant::now();
+            last_action = None;
+        }
 
         // temp to save some cpu cycles
         std::thread::sleep(std::time::Duration::from_millis(20));
@@ -69,13 +73,13 @@ fn handle_input(
 ) {
     if let Some(input) = input {
         if let InputAction::Direction(dir) = input {
-            let query = world.query::<rglk_game::components::Player>()
-                .with::<rglk_game::components::Actor>();
-            if let Some(item) = query.iter().next() {
-                let action = rglk_game::actions::Sail{
-                    entity: item.entity, direction: dir
-                };
-                item.get_mut::<rglk_game::components::Actor>().unwrap().next = Some(Box::new(action));
+            let query = world.query::<rglk_game::components::Player>();
+            let Some(entity) = query.iter().next() else { return };
+            let entity = entity.entity;
+            let Some(mut actor) = world.get_component_mut::<rglk_game::components::Actor>(entity) else { return };
+            let Some(card) = world.get_component::<rglk_game::components::Card>(actor.cards[0]) else { return };
+            if let Some(action) = card.0.get_possible_actions(entity, world).remove(&dir) {
+                actor.action = Some(action);
             }
         }
     }

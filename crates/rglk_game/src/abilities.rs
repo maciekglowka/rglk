@@ -1,0 +1,77 @@
+use std::{
+    collections::HashMap,
+    f32::consts::PI
+};
+
+use rglk_math::vectors::{Vector2I, ORTHO_DIRECTIONS};
+use rglk_storage::{Entity, World};
+
+use super::actions::{Action, Travel};
+use super::board::Board;
+use super::components::Position;
+use super::wind::Wind;
+
+pub trait Ability {
+    fn get_possible_actions(
+        &self,
+        entity: Entity,
+        world: &World
+    ) -> HashMap<Vector2I, Box<dyn Action>>;
+}
+
+pub struct Sailing;
+impl Ability for Sailing {
+    fn get_possible_actions(&self, entity: Entity, world: &World) -> HashMap<Vector2I, Box<dyn Action>> {
+        let mut output = HashMap::new();
+        let Some(wind) = world.get_resource::<Wind>() else { return output };
+        let Some(position) = world.get_component::<Position>(entity) else { return output };
+
+        for dir in ORTHO_DIRECTIONS {
+            let dist = match wind.current().angle(&dir) {
+                a if (PI - 0.1..PI + 0.1).contains(&a) => continue,
+                a if (-0.1..0.1).contains(&a) => 2,
+                _ => 1
+            };
+            if let Some(target) = self.get_valid_tile(position.0, dir, dist, world) {
+                output.insert(dir, Box::new(Travel { entity, target }));
+            }
+        }
+
+        output
+    }
+}
+impl Sailing {
+    fn get_valid_tile(
+        &self,
+        source: Vector2I,
+        dir: Vector2I,
+        dist: i32,
+        world: &World
+    ) -> Option<Vector2I> {
+        // gets a furthest possible valid tile at a sailing direction
+        let board = world.get_resource::<Board>()?;
+        for d in (1..=dist).rev() {
+            let v = source + dir * d;
+            if board.tiles.contains_key(&v) { return Some(v) }
+        }
+        None
+    }
+}
+
+pub struct Rowing;
+impl Ability for Rowing {
+    fn get_possible_actions(&self, entity: Entity, world: &World) -> HashMap<Vector2I, Box<dyn Action>> {
+        let mut output = HashMap::new();
+        let Some(position) = world.get_component::<Position>(entity) else { return output };
+        let Some(board) = world.get_resource::<Board>() else { return output };
+
+        for dir in ORTHO_DIRECTIONS {
+            let target = position.0 + dir;
+            if board.tiles.contains_key(&target) {
+                output.insert(dir, Box::new(Travel { entity, target }));
+            }
+        }
+
+        output
+    }
+}

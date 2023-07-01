@@ -1,6 +1,6 @@
 pub type IdSize = u16;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct Entity {
     pub id: IdSize,
     pub version: IdSize

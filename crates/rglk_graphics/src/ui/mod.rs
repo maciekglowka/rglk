@@ -5,7 +5,15 @@ use rglk_sprites::{Assets, SpriteColor};
 
 use super::GraphicsState;
 
-pub fn draw_wind_queue(world: &World, state: &GraphicsState) {
+pub fn ui_update(
+    world: &World,
+    state: &mut GraphicsState   
+) {
+    draw_wind_queue(world, state);
+}
+
+
+fn draw_wind_queue(world: &World, state: &GraphicsState) {
     let Some(wind) = world.get_resource::<Wind>() else { return };
     let Some(atlas) = state.assets.atlases.get("ascii") else { return };
     for (i, dir) in wind.queue.iter().enumerate() {

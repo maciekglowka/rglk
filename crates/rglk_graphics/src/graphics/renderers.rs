@@ -5,8 +5,9 @@ use rglk_math::vectors::Vector2F;
 use rglk_sprites::{Assets, SpriteColor};
 use rglk_storage::{ComponentSet, Entity, World, WorldEvent};
 
-use super::GraphicsState;
-use crate::globals::{TILE_SIZE, ACTOR_Z, FIXTURE_Z, TILE_Z};
+use super::super::GraphicsState;
+use super::utils::move_towards;
+use crate::globals::{TILE_SIZE, ACTOR_Z, FIXTURE_Z, TILE_Z, MOVEMENT_SPEED};
 
 pub struct SpriteRenderer {
     pub entity: Entity,
@@ -44,11 +45,15 @@ pub fn spawn_sprites(
 pub fn update_sprites(
     positions: &ComponentSet<Position>,
     state: &mut GraphicsState
-) {
+) -> bool {
+    let mut ready = true;
     for sprite in state.sprites.iter_mut() {
         let Some(position) = positions.get(sprite.entity) else { continue };
-        sprite.v = position.0.as_f32() * TILE_SIZE;
+        let target = position.0.as_f32() * TILE_SIZE;
+        sprite.v = move_towards(sprite.v, target, MOVEMENT_SPEED);
+        if sprite.v != target { ready = false }
     }
+    ready
 }
 
 pub fn draw_sprites(state: &GraphicsState) {
@@ -81,15 +86,15 @@ fn get_sprite_renderer(
     }
 
     let index = match name.0.as_str() {
-        "Player" => 2,
-        "Link" => 10,
+        "Player" => 127,
+        "Rowers" => 15,
         "Tile" => 177,
         _ => 0
     };
     let color = match name.0.as_str() {
-        "Player" => SpriteColor(255, 0, 255, 255),
-        "Link" => SpriteColor(0, 0, 255, 255),
-        "Tile" => SpriteColor(100, 100, 100, 255),
+        "Player" => SpriteColor(255, 255, 255, 255),
+        "Rowers" => SpriteColor(255, 0, 255, 255),
+        "Tile" => SpriteColor(50, 50, 200, 255),
         _ => SpriteColor(0, 0, 0, 0) 
     };
 
