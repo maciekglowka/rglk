@@ -26,9 +26,13 @@ pub fn init(world: &mut World) {
     let queue = actions::ActorQueue(VecDeque::new());
     world.insert_resource(queue);
 
-    let card = world.spawn_entity();
-    let _ = world.insert_component(card, components::Card(
+    let sail_card = world.spawn_entity();
+    let _ = world.insert_component(sail_card, components::Card(
         Box::new(abilities::Sailing)
+    ));
+    let cannons_card = world.spawn_entity();
+    let _ = world.insert_component(cannons_card, components::Card(
+        Box::new(abilities::Cannons { dist: 4, damage: 2 })
     ));
 
     let player = world.spawn_entity();
@@ -39,7 +43,7 @@ pub fn init(world: &mut World) {
         active_card: 0
     });
     let _ = world.insert_component(player, components::Actor { 
-        cards: vec![card],
+        cards: vec![sail_card, cannons_card],
         action: None
     });
 

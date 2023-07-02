@@ -20,7 +20,8 @@ fn window_conf() -> Conf {
 
 #[derive(Clone, Copy)]
 enum InputAction {
-    Direction(rglk_math::vectors::Vector2I)
+    Direction(rglk_math::vectors::Vector2I),
+    ChangeCard
 }
 
 #[macroquad::main(window_conf)]
@@ -73,20 +74,32 @@ fn handle_input(
     world: &rglk_storage::World
 ) {
     if let Some(input) = input {
-        if let InputAction::Direction(dir) = input {
-            let query = world.query::<rglk_game::components::Player>();
-            let Some(entity) = query.iter().next() else { return };
-            let entity = entity.entity;
-            let Some(mut actor) = world.get_component_mut::<rglk_game::components::Actor>(entity) else { return };
-            let Some(card) = world.get_component::<rglk_game::components::Card>(actor.cards[0]) else { return };
-            if let Some(action) = card.0.get_possible_actions(entity, world).remove(&dir) {
-                actor.action = Some(action);
+        let query = world.query::<rglk_game::components::Player>();
+        let Some(item) = query.iter().next() else { return };
+        let entity = item.entity;
+
+        match input {
+            InputAction::Direction(dir) => {
+                let Some(mut actor) = world.get_component_mut::<rglk_game::components::Actor>(entity) else { return };
+                let player = item.get::<rglk_game::components::Player>().unwrap();
+                let Some(card) = world.get_component::<rglk_game::components::Card>(actor.cards[player.active_card]) else { return };
+                if let Some(action) = card.0.get_possible_actions(entity, world).remove(&dir) {
+                    actor.action = Some(action);
+                }
+            },
+            InputAction::ChangeCard => {
+                let Some(actor) = world.get_component::<rglk_game::components::Actor>(entity) else { return };
+                let mut player = item.get_mut::<rglk_game::components::Player>().unwrap();
+                player.active_card = (player.active_card + 1) % actor.cards.len();
             }
         }
     }
 }
 
 fn get_input_action() -> Option<InputAction> {
+    if is_key_down(KeyCode::Space) {
+        return Some(InputAction::ChangeCard)
+    }
     let mut dir = None;
     if is_key_down(KeyCode::A) {
         dir = Some(rglk_math::vectors::Vector2I::new(-1, 0));

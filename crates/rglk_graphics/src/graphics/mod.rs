@@ -10,9 +10,13 @@ pub fn graphics_update(
     world: &World,
     state: &mut GraphicsState
 ) -> bool {
-    renderers::spawn_sprites(world, state);
-    let ready = renderers::update_sprites(
+    renderers::handle_world_events(world, state);
+    let mut ready = renderers::update_sprites(
         &world.get_component_set::<Position>().unwrap(),
+        state
+    );
+    ready = ready && renderers::update_projectiles(
+        &world,
         state
     );
     renderers::draw_sprites(state);

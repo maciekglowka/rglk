@@ -6,7 +6,7 @@ use std::{
 use rglk_math::vectors::{Vector2I, ORTHO_DIRECTIONS};
 use rglk_storage::{Entity, World};
 
-use super::actions::{Action, Travel};
+use super::actions::{Action, Shoot, Travel};
 use super::board::Board;
 use super::components::{Blocker, Position};
 use super::wind::Wind;
@@ -71,6 +71,27 @@ impl Ability for Rowing {
         }
         output.insert(Vector2I::ZERO, Box::new(Travel { entity, target: position.0 }));
 
+        output
+    }
+}
+
+pub struct Cannons {
+    pub dist: u32,
+    pub damage: u32
+}
+impl Ability for Cannons {
+    fn get_possible_actions(&self, entity: Entity, world: &World) -> HashMap<Vector2I, Box<dyn Action>> {
+        let mut output = HashMap::new();
+        let Some(position) = world.get_component::<Position>(entity) else { return output };
+
+        for dir in ORTHO_DIRECTIONS {
+            output.insert(dir, Box::new(Shoot {
+                source: position.0,
+                dir,
+                dist: self.dist,
+                damage: self.damage 
+            }));
+        }
         output
     }
 }

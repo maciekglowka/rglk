@@ -33,5 +33,12 @@ impl Component for Player {}
 pub struct Position(pub Vector2I);
 impl Component for Position {}
 
+pub struct Projectile{
+    pub damage: u32,
+    pub source: Vector2I,
+    pub target: Vector2I
+}
+impl Component for Projectile {}
+
 pub struct Tile;
 impl Component for Tile {}

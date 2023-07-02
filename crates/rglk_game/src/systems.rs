@@ -3,10 +3,11 @@
 use::rglk_storage::{Entity, World};
 
 use super::actions::{Action, ActorQueue, Pause};
-use super::components::{Actor, Card, Player, Position};
+use super::components::{Actor, Card, Player, Position, Projectile};
 use super::wind::Wind;
 
 pub fn game_step(world: &mut World) {
+    hit_projectiles(world);
     let Some(actor) = get_current_actor(world) else {
         turn_end(world);
         return
@@ -56,6 +57,18 @@ fn collect_actor_queue(world: &mut World) {
     let mut actors = world.query::<Actor>().iter().map(|a| a.entity).collect::<Vec<_>>();
     actors.sort_by(|a, b| a.id.cmp(&b.id));
     queue.0 = actors.into();
+}
+
+fn hit_projectiles(world: &mut World) {
+    // this should be called before actions are exectued
+    // to clear projectiles spawned at the previous tick
+    let query = world.query::<Projectile>();
+    let projectiles = query.iter()
+        .map(|a| a.entity)
+        .collect::<Vec<_>>();
+    for entity in projectiles {
+        world.despawn_entity(entity);
+    }
 }
 
 fn turn_end(world: &mut World) {
