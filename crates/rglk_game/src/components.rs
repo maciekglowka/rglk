@@ -22,6 +22,9 @@ impl Component for Card {}
 pub struct Fixture;
 impl Component for Fixture {}
 
+pub struct Health(pub u32);
+impl Component for Health {}
+
 pub struct Name (pub String);
 impl Component for Name {}
 

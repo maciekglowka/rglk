@@ -57,8 +57,8 @@ impl Sailing {
     }
 }
 
-pub struct Rowing;
-impl Ability for Rowing {
+pub struct Swimming;
+impl Ability for Swimming {
     fn get_possible_actions(&self, entity: Entity, world: &World) -> HashMap<Vector2I, Box<dyn Action>> {
         let mut output = HashMap::new();
         let Some(position) = world.get_component::<Position>(entity) else { return output };

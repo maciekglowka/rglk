@@ -3,12 +3,13 @@ use rglk_storage::{Entity, World};
 
 use std::collections::VecDeque;
 
-use super::components::{Blocker, Name, Player, Position, Projectile};
+use super::components::{Blocker, Health, Name, Player, Position, Projectile};
 
+pub struct PendingActions(pub Vec<Box<dyn Action>>);
 pub struct ActorQueue(pub VecDeque<Entity>);
 
 pub trait Action {
-    fn execute(&self, world: &mut World);
+    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>>;
     fn score(&self, world: &World) -> i32 { 0 }
 }
 
@@ -17,10 +18,10 @@ pub struct Travel {
     pub target: Vector2I
 }
 impl Action for Travel {
-    fn execute(&self, world: &mut World) {
-        let Some(mut position) = world.get_component_mut::<Position>(self.entity)
-            else { return };
+    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+        let mut position = world.get_component_mut::<Position>(self.entity)?;
         position.0 = self.target;
+        None
     }
     fn score(&self, world: &World) -> i32 {
         let Some(player_position) = world.query::<Player>().with::<Position>()
@@ -56,7 +57,7 @@ impl Shoot {
     }
 }
 impl Action for Shoot {
-    fn execute(&self, world: &mut World) {
+    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
         let target = self.get_target(world);
         let entity = world.spawn_entity();
         let _ = world.insert_component(entity, Projectile{
@@ -64,6 +65,7 @@ impl Action for Shoot {
             target,
             source: self.source
         });
+        None
     }
     fn score(&self, world: &World) -> i32 {
         let Some(player_position) = world.query::<Player>().with::<Position>()
@@ -82,5 +84,18 @@ impl Action for Shoot {
 
 pub struct Pause;
 impl Action for Pause {
-    fn execute(&self, world: &mut World) {}
+    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> { None }
+}
+
+pub struct Damage {
+    pub entity: Entity,
+    pub value: u32
+}
+impl Action for Damage {
+    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+        let mut health = world.get_component_mut::<Health>(self.entity)?;
+        health.0 = health.0.saturating_sub(self.value);
+        None
+    }
+    // score is not implemented as it always should be a resulting action
 }

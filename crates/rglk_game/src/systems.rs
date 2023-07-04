@@ -2,12 +2,16 @@
 
 use::rglk_storage::{Entity, World};
 
-use super::actions::{Action, ActorQueue, Pause};
-use super::components::{Actor, Card, Player, Position, Projectile};
+use super::actions::{Action, ActorQueue, Damage, Pause, PendingActions};
+use super::components::{Actor, Card, Health, Player, Position, Projectile};
 use super::wind::Wind;
 
 pub fn game_step(world: &mut World) {
     hit_projectiles(world);
+    let pending_result = process_pending_actions(world);
+    kill_units(world);
+    // do not process the actor queue if the pending actions were executed
+    if pending_result.is_some() { return };
     let Some(actor) = get_current_actor(world) else {
         turn_end(world);
         return
@@ -17,6 +21,24 @@ pub fn game_step(world: &mut World) {
         // if we reached this point it should be safe to unwrap
         // on the actor queue
         world.get_resource_mut::<ActorQueue>().unwrap().0.pop_front();
+    }
+}
+
+fn process_pending_actions(world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+    // returns executed actions from the queue
+    let pending = world.get_resource_mut::<PendingActions>()?.0.drain(..).collect::<Vec<_>>();
+    let mut resulting = Vec::new();
+    let mut output = Vec::new();
+    for action in pending {
+        let res = action.execute(world);
+        if let Some(res) = res {
+            resulting.extend(res);
+        }
+        output.push(action);
+    }
+    match resulting.len() {
+        0 => None,
+        _ => Some(resulting)
     }
 }
 
@@ -63,10 +85,38 @@ fn hit_projectiles(world: &mut World) {
     // this should be called before actions are exectued
     // to clear projectiles spawned at the previous tick
     let query = world.query::<Projectile>();
-    let projectiles = query.iter()
+    let health_query = world.query::<Health>().with::<Position>();
+
+    if let Some(mut pending) = world.get_resource_mut::<PendingActions>() {
+        for item in query.iter() {
+            let projectile = item.get::<Projectile>().unwrap();
+            let target = health_query.iter()
+                .filter(|a| a.get::<Position>().unwrap().0 == projectile.target)
+                .next();
+            if let Some(target) = target {
+                pending.0.push(
+                    Box::new(Damage { entity: target.entity, value: projectile.damage })
+                );
+            }
+        }
+    };
+
+    let entities = query.iter()
         .map(|a| a.entity)
         .collect::<Vec<_>>();
-    for entity in projectiles {
+    for entity in entities {
+        world.despawn_entity(entity);
+        
+    }
+}
+
+fn kill_units(world: &mut World) {
+    let query = world.query::<Health>();
+    let entities = query.iter()
+        .filter(|a| a.get::<Health>().unwrap().0 == 0)
+        .map(|a| a.entity)
+        .collect::<Vec<_>>();
+    for entity in entities {
         world.despawn_entity(entity);
     }
 }
