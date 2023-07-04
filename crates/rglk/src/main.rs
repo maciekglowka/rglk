@@ -77,7 +77,6 @@ fn handle_input(
         let query = world.query::<rglk_game::components::Player>();
         let Some(item) = query.iter().next() else { return };
         let entity = item.entity;
-
         match input {
             InputAction::Direction(dir) => {
                 let Some(mut actor) = world.get_component_mut::<rglk_game::components::Actor>(entity) else { return };

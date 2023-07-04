@@ -55,7 +55,11 @@ fn process_actor(entity: Entity, world: &mut World) -> Option<Box<dyn Action>> {
 }
 
 fn get_action(entity: Entity, world: &mut World) -> Option<Box<dyn Action>> {
-    let mut actor = world.get_component_mut::<Actor>(entity)?;
+    let Some(mut actor) = world.get_component_mut::<Actor>(entity) else {
+        // remove actor from the queue as it might have been killed or smth
+        world.get_resource_mut::<ActorQueue>()?.0.retain(|a| *a != entity);
+        return None;
+    };
     if let Some(action) = actor.action.take() { return Some(action) };
     if world.get_component::<Player>(entity).is_some() { return None };
 
