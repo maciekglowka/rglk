@@ -25,6 +25,9 @@ impl Component for Fixture {}
 pub struct Health(pub u32);
 impl Component for Health {}
 
+pub struct Melee(pub u32);
+impl Component for Melee {}
+
 pub struct Name (pub String);
 impl Component for Name {}
 

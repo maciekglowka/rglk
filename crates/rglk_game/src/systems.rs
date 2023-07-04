@@ -3,11 +3,12 @@
 use::rglk_storage::{Entity, World};
 
 use super::actions::{Action, ActorQueue, Damage, Pause, PendingActions};
-use super::components::{Actor, Card, Health, Player, Position, Projectile};
+use super::components::{Actor, Card, Health, Melee, Player, Position, Projectile};
 use super::wind::Wind;
 
 pub fn game_step(world: &mut World) {
     hit_projectiles(world);
+    hit_melee(world);
     let pending_result = process_pending_actions(world);
     kill_units(world);
     // do not process the actor queue if the pending actions were executed
@@ -85,6 +86,27 @@ fn collect_actor_queue(world: &mut World) {
     queue.0 = actors.into();
 }
 
+fn hit_melee(world: &mut World) {
+    let melee_query = world.query::<Melee>().with::<Position>();
+    let health_query = world.query::<Health>().with::<Position>();
+
+    let Some(mut pending) = world.get_resource_mut::<PendingActions>() else { return };
+
+    for item in melee_query.iter() {
+        let position = item.get::<Position>().unwrap();
+        let targets = health_query.iter()
+            .filter(|a| a.get::<Position>().unwrap().0.manhattan(position.0) == 1)
+            .collect::<Vec<_>>();
+        for target in targets {
+            if !are_hostile(item.entity, target.entity, world) { continue; }
+            let damage = item.get::<Melee>().unwrap().0;
+            pending.0.push(
+                Box::new(Damage { entity: target.entity, value: damage })
+            );
+        }
+    }
+}
+
 fn hit_projectiles(world: &mut World) {
     // this should be called before actions are exectued
     // to clear projectiles spawned at the previous tick
@@ -130,4 +152,12 @@ fn turn_end(world: &mut World) {
         wind.pop_wind();
     }
     collect_actor_queue(world);
+}
+
+fn are_hostile(source: Entity, target: Entity, world: &World) -> bool {
+    if world.get_component::<Player>(source).is_some() {
+        return world.get_component::<Player>(target).is_none()
+    } else {
+        return world.get_component::<Player>(target).is_some()
+    }
 }
