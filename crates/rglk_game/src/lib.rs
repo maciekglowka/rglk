@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use std::collections::VecDeque;
 
 use rglk_math::vectors::Vector2I;
@@ -56,14 +57,21 @@ pub fn init(world: &mut World) {
         Box::new(abilities::Swimming)
     ));
 
-    let npc = world.spawn_entity();
-    let _ = world.insert_component(npc, components::Position(Vector2I::new(5, 5)));
-    let _ = world.insert_component(npc, components::Name("Rowers".into()));
-    let _ = world.insert_component(npc, components::Health(1));
-    let _ = world.insert_component(npc, components::Melee(1));
-    let _ = world.insert_component(npc, components::Blocker);
-    let _ = world.insert_component(npc, components::Actor { 
-        cards: vec![rowers_card],
-        action: None
-    });
+    let mut rng = thread_rng();
+    for _ in 0..3 {
+        let v = Vector2I::new(
+            rng.gen_range(4..8),
+            rng.gen_range(4..8),
+        );
+        let npc = world.spawn_entity();
+        let _ = world.insert_component(npc, components::Position(v));
+        let _ = world.insert_component(npc, components::Name("Rowers".into()));
+        let _ = world.insert_component(npc, components::Health(1));
+        let _ = world.insert_component(npc, components::Melee(1));
+        let _ = world.insert_component(npc, components::Blocker);
+        let _ = world.insert_component(npc, components::Actor { 
+            cards: vec![rowers_card],
+            action: None
+        });
+    }
 }

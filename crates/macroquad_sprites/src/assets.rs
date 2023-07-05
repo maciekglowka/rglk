@@ -1,36 +1,17 @@
 use macroquad::prelude::*;
-use std::collections::HashMap;
 
 use rglk_math::vectors::Vector2F;
 
 use super::errors::AssetError;
 
-pub struct Assets {
-    pub atlases: HashMap<String, SpriteAtlas>
-}
-impl Assets {
-    pub fn new() -> Self {
-        Assets { atlases: HashMap::new() }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct SpriteColor(pub u8, pub u8, pub u8, pub u8);
-impl From<SpriteColor> for macroquad::color::Color {
-    fn from(value: SpriteColor) -> Self {
-        macroquad::color::Color::from_rgba(value.0, value.1, value.2, value.3)
-    }
-}
-
 #[derive(Debug)]
 pub struct SpriteAtlas {
-    tex: Texture2D,
+    pub tex: Texture2D,
     columns: u32,
     rows: u32,
     grid_size: Vec2,
     grid_offset: Vec2,
     sprite_size: Vec2,
-    // spacing: Option<f32>
 }
 impl SpriteAtlas {
     pub async fn new(
@@ -58,25 +39,14 @@ impl SpriteAtlas {
             tex, sprite_size, grid_size, grid_offset, rows, columns
         })
     }
-    pub fn draw_sprite(
-        &self,
-        pos: Vector2F,
-        size: Vector2F,
-        idx: u32,
-        color: SpriteColor
-    ) {
+    pub fn get_sprite(&self, idx: u32) -> Rect {
         let row = idx / self.columns;
         let col = idx % self.columns;
-        let params = DrawTextureParams {
-            dest_size: Some(Vec2::new(size.x, size.y)),
-            source: Some(Rect::new(
-                col as f32 * self.grid_size.x + self.grid_offset.x,
-                row as f32 * self.grid_size.x + self.grid_offset.x,
-                self.sprite_size.x,
-                self.sprite_size.y
-            )),
-            ..Default::default()
-        };
-        draw_texture_ex(self.tex, pos.x, pos.y, color.into(), params);
+        Rect::new(
+            col as f32 * self.grid_size.x + self.grid_offset.x,
+            row as f32 * self.grid_size.x + self.grid_offset.x,
+            self.sprite_size.x,
+            self.sprite_size.y
+        )
     }
 }

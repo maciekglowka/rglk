@@ -1,25 +1,21 @@
-pub mod assets;
 pub mod globals;
 mod graphics;
 mod ui;
 
-use rglk_game::components::{Position};
 use rglk_events::SubscriberHandle;
+use rglk_math::vectors::Vector2F;
 use rglk_storage::{World, WorldEvent};
 
 pub use graphics::graphics_update;
 pub use ui::ui_update;
 
 pub struct GraphicsState {
-    pub assets: rglk_sprites::Assets,
-    // TODO use sparse storage ?
-    pub sprites: Vec<graphics::renderers::SpriteRenderer>,
-    pub ev_world: SubscriberHandle<WorldEvent>
+    sprites: Vec<graphics::renderers::SpriteRenderer>,
+    ev_world: SubscriberHandle<WorldEvent>
 }
 impl GraphicsState {
-    pub fn new(world: &mut World, assets: rglk_sprites::Assets) -> Self {
+    pub fn new(world: &mut World) -> Self {
         GraphicsState { 
-            assets: assets,
             sprites: Vec::new(),
             ev_world: world.events.subscribe()
         }
@@ -28,3 +24,25 @@ impl GraphicsState {
         self.sprites.sort_by(|a, b| a.z_index.cmp(&b.z_index));
     }
 }
+
+pub trait GraphicsBackend {
+    fn draw_world_sprite(
+        &self,
+        atlas_name: &str,
+        index: u32,
+        position: Vector2F,
+        size: Vector2F,
+        color: SpriteColor
+    );
+    fn draw_ui_sprite(
+        &self,
+        atlas_name: &str,
+        index: u32,
+        position: Vector2F,
+        size: Vector2F,
+        color: SpriteColor
+    );
+}
+
+#[derive(Clone, Copy)]
+pub struct SpriteColor(pub u8, pub u8, pub u8, pub u8);

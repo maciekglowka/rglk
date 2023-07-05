@@ -2,10 +2,9 @@ use std::any::TypeId;
 
 use rglk_game::components::{Actor, Fixture, Name, Position, Projectile, Tile};
 use rglk_math::vectors::Vector2F;
-use rglk_sprites::{Assets, SpriteColor};
 use rglk_storage::{ComponentSet, Entity, World, WorldEvent};
 
-use super::super::GraphicsState;
+use super::super::{GraphicsState, GraphicsBackend, SpriteColor};
 use super::utils::move_towards;
 use crate::globals::{TILE_SIZE, ACTOR_Z, FIXTURE_Z, PROJECTILE_Z, TILE_Z, MOVEMENT_SPEED};
 
@@ -87,14 +86,14 @@ pub fn update_projectiles(
     ready
 }
 
-pub fn draw_sprites(state: &GraphicsState) {
+pub fn draw_sprites(state: &GraphicsState, backend: &dyn GraphicsBackend) {
     for sprite in state.sprites.iter() {
-        let Some(atlas) = state.assets.atlases.get(&sprite.atlas_name) else { continue };
-        atlas.draw_sprite(
+        backend.draw_world_sprite(
+            &sprite.atlas_name,
+            sprite.index,
             sprite.v,
             Vector2F::new(TILE_SIZE, TILE_SIZE),
-            sprite.index, 
-            sprite.color.into()
+            sprite.color
         );
     }
 }
@@ -144,7 +143,6 @@ fn get_projectile_renderer(
     world: &World,
 ) -> SpriteRenderer {
     let projectile = world.get_component::<Projectile>(entity).unwrap();
-
     SpriteRenderer { 
         entity: entity,
         v: projectile.source.as_f32() * TILE_SIZE,

@@ -6,9 +6,12 @@ use super::GraphicsState;
 pub mod renderers;
 mod utils;
 
+use super::GraphicsBackend;
+
 pub fn graphics_update(
     world: &World,
-    state: &mut GraphicsState
+    state: &mut GraphicsState,
+    backend: &dyn GraphicsBackend
 ) -> bool {
     renderers::handle_world_events(world, state);
     let mut ready = renderers::update_sprites(
@@ -19,6 +22,6 @@ pub fn graphics_update(
         &world,
         state
     );
-    renderers::draw_sprites(state);
+    renderers::draw_sprites(state, backend);
     ready
 }

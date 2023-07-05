@@ -6,7 +6,7 @@ use std::{
 
 use rglk_game;
 use rglk_graphics;
-use rglk_sprites;
+use macroquad_sprites;
 use rglk_storage;
 
 fn window_conf() -> Conf {
@@ -26,8 +26,16 @@ enum InputAction {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut graphics_assets = rglk_sprites::Assets::new();
-    rglk_graphics::assets::load_assets(&mut graphics_assets).await;
+    // let mut graphics_assets = rglk_sprites::Assets::new();
+    let mut backend = macroquad_sprites::MacroquadBackend::new();
+
+    let _ = backend.load_atlas(
+            "ascii",
+            "assets/sprites/ascii.png",
+            16,
+            16,
+            None
+        ).await;
 
     let mut world = rglk_storage::World::new();
     let main_camera = Camera2D {
@@ -36,8 +44,7 @@ async fn main() {
         ..Default::default()
     };
     let mut graphics_state = rglk_graphics::GraphicsState::new(
-        &mut world,
-        graphics_assets
+        &mut world
     );
     rglk_game::init(&mut world);
 
@@ -54,13 +61,18 @@ async fn main() {
         }
 
         if graphics_ready {
+            // let start = Instant::now();
             rglk_game::game_step(&mut world);
+            // println!("{:?}", start.elapsed()); 
         }
         clear_background(BLACK);
         set_camera(&main_camera);
-        graphics_ready = rglk_graphics::graphics_update(&world, &mut graphics_state);
+        backend.set_bounds(&main_camera);
+        // let start = Instant::now();
+        graphics_ready = rglk_graphics::graphics_update(&world, &mut graphics_state, &backend);
+        // println!("{:?}", start.elapsed()); 
         set_default_camera();
-        rglk_graphics::ui_update(&world, &mut graphics_state);
+        rglk_graphics::ui_update(&world, &mut graphics_state, &backend);
         next_frame().await;
 
 
