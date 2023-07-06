@@ -6,7 +6,7 @@ use std::{
 use rglk_math::vectors::{Vector2I, ORTHO_DIRECTIONS};
 use rglk_storage::{Entity, World};
 
-use super::actions::{Action, Shoot, Travel};
+use super::actions::{Action, PlaceBouy, Shoot, Travel};
 use super::board::Board;
 use super::components::{Blocker, Position};
 use super::wind::Wind;
@@ -101,6 +101,27 @@ impl Ability for Cannons {
                 dist: self.dist,
                 damage: self.damage 
             }));
+        }
+        output
+    }
+}
+
+pub struct Bouy {
+    pub health: u32
+}
+impl Ability for Bouy {
+    fn description(&self) -> String {
+        "Buoy".into()
+    }
+    fn get_possible_actions(&self, entity: Entity, world: &World) -> HashMap<Vector2I, Box<dyn Action>> {
+        let mut output = HashMap::new();
+        let Some(position) = world.get_component::<Position>(entity) else { return output };
+
+        for dir in ORTHO_DIRECTIONS {
+            let target = position.0 + dir;
+            if is_tile_traversible(target, world) {
+                output.insert(dir, Box::new(PlaceBouy { position: target, health: self.health }));
+            }
         }
         output
     }

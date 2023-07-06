@@ -2,13 +2,13 @@
 
 use::rglk_storage::{Entity, World};
 
+use super::GameState;
 use super::actions::{Action, ActorQueue, Damage, Pause, PendingActions};
 use super::components::{Actor, Card, Health, Melee, Player, PlayerCharacter, Position, Projectile};
 use super::wind::Wind;
 
 pub fn game_step(world: &mut World) {
     hit_projectiles(world);
-    hit_melee(world);
     let pending_result = process_pending_actions(world);
     kill_units(world);
     // do not process the actor queue if the pending actions were executed
@@ -17,11 +17,11 @@ pub fn game_step(world: &mut World) {
         turn_end(world);
         return
     };
-    let action = process_actor(actor, world);
-    if let Some(_action) = action {
+    if process_actor(actor, world) {
         // if we reached this point it should be safe to unwrap
         // on the actor queue
         world.get_resource_mut::<ActorQueue>().unwrap().0.pop_front();
+        try_melee(actor, world);
     }
 }
 
@@ -31,7 +31,7 @@ fn process_pending_actions(world: &mut World) -> Option<Vec<Box<dyn Action>>> {
     let mut resulting = Vec::new();
     let mut output = Vec::new();
     for action in pending {
-        let res = action.execute(world);
+        let res = execute_action(&*action, world);
         if let Some(res) = res {
             resulting.extend(res);
         }
@@ -48,11 +48,16 @@ fn get_current_actor(world: &mut World) -> Option<Entity> {
     queue.0.get(0).map(|&e| e)
 }
 
-fn process_actor(entity: Entity, world: &mut World) -> Option<Box<dyn Action>> {
-    // returns a succesfully performed action or None
-    let action = get_action(entity, world)?;
-    action.execute(world);
-    Some(action)
+fn process_actor(entity: Entity, world: &mut World) -> bool {
+    // return true is succesful
+    let Some(action) = get_action(entity, world) else { return false };
+    let res = execute_action(&*action, world);
+    if let Some(res) = res {
+        if let Some(mut pending) = world.get_resource_mut::<PendingActions>() {
+            pending.0.extend(res);
+        }
+    }
+    true
 }
 
 fn get_action(entity: Entity, world: &mut World) -> Option<Box<dyn Action>> {
@@ -86,24 +91,21 @@ fn collect_actor_queue(world: &mut World) {
     queue.0 = actors.into();
 }
 
-fn hit_melee(world: &mut World) {
-    let melee_query = world.query::<Melee>().with::<Position>();
-    let health_query = world.query::<Health>().with::<Position>();
-
+fn try_melee(entity: Entity, world: &mut World) {
+    let Some(melee) = world.get_component::<Melee>(entity) else { return };
+    let Some(position) = world.get_component::<Position>(entity) else { return };
     let Some(mut pending) = world.get_resource_mut::<PendingActions>() else { return };
 
-    for item in melee_query.iter() {
-        let position = item.get::<Position>().unwrap();
-        let targets = health_query.iter()
-            .filter(|a| a.get::<Position>().unwrap().0.manhattan(position.0) == 1)
-            .collect::<Vec<_>>();
-        for target in targets {
-            if !are_hostile(item.entity, target.entity, world) { continue; }
-            let damage = item.get::<Melee>().unwrap().0;
-            pending.0.push(
-                Box::new(Damage { entity: target.entity, value: damage })
-            );
-        }
+    let targets = world.query::<Health>().with::<Position>().iter()
+        .filter(|a| a.get::<Position>().unwrap().0.manhattan(position.0) == 1)
+        .map(|a| a.entity)
+        .collect::<Vec<_>>();
+
+    for target in targets {
+        if !are_hostile(entity, target, world) { continue; }
+        pending.0.push(
+            Box::new(Damage { entity: target, value: melee.0 })
+        );
     }
 }
 
@@ -160,4 +162,11 @@ fn are_hostile(source: Entity, target: Entity, world: &World) -> bool {
     } else {
         return world.get_component::<Player>(target).is_some()
     }
+}
+
+fn execute_action(action: &dyn Action, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+    if let Some(mut state) = world.get_resource_mut::<GameState>() {
+        state.action_events.publish(super::ActionEvent(action.as_data()))
+    }
+    action.execute(world)
 }

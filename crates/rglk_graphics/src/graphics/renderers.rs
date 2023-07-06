@@ -103,7 +103,7 @@ fn get_sprite_renderer(
     world: &World,
 ) -> SpriteRenderer {
     let mut z_index = 0;
-    
+
     let name = world.get_component::<Name>(entity).unwrap();
     let position = world.get_component::<Position>(entity).unwrap();
 
@@ -116,12 +116,14 @@ fn get_sprite_renderer(
     }
 
     let index = match name.0.as_str() {
+        "Buoy" => 9,
         "Player" => 127,
         "Rowers" => 15,
         "Tile" => 177,
         _ => 0
     };
     let color = match name.0.as_str() {
+        "Buoy" => SpriteColor(255, 255, 0, 255),
         "Player" => SpriteColor(255, 255, 255, 255),
         "Rowers" => SpriteColor(255, 0, 255, 255),
         "Tile" => SpriteColor(50, 50, 200, 255),

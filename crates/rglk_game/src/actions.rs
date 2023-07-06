@@ -3,14 +3,25 @@ use rglk_storage::{Entity, World};
 
 use std::collections::VecDeque;
 
-use super::components::{Blocker, Health, Name, PlayerCharacter, Position, Projectile};
+use super::components::{Blocker, Health, Name, Player, PlayerCharacter, Position, Projectile};
 
 pub struct PendingActions(pub Vec<Box<dyn Action>>);
 pub struct ActorQueue(pub VecDeque<Entity>);
 
+// data sharing struct (eg. for use with the graphics module)
+// if this won't be generic enough, events would have to accept cloning
+#[derive(Clone, Copy)]
+pub struct ActionData {
+    pub name: &'static str,
+    pub entity: Option<Entity>,
+    pub position: Option<Vector2I>,
+    pub value: Option<i32>
+}
+
 pub trait Action {
     fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>>;
     fn score(&self, world: &World) -> i32 { 0 }
+    fn as_data(&self) -> ActionData;
 }
 
 pub struct Travel {
@@ -18,6 +29,9 @@ pub struct Travel {
     pub target: Vector2I
 }
 impl Action for Travel {
+    fn as_data(&self) -> ActionData {
+        ActionData { name: "Travel", entity: Some(self.entity), position: Some(self.target), value: None }
+    }
     fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
         let mut position = world.get_component_mut::<Position>(self.entity)?;
         position.0 = self.target;
@@ -57,6 +71,9 @@ impl Shoot {
     }
 }
 impl Action for Shoot {
+    fn as_data(&self) -> ActionData {
+        ActionData { name: "Shoot", entity: None, position: Some(self.source), value: Some(self.damage as i32) }
+    }
     fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
         let target = self.get_target(world);
         let entity = world.spawn_entity();
@@ -82,8 +99,35 @@ impl Action for Shoot {
     }
 }
 
+pub struct PlaceBouy {
+    pub position: Vector2I,
+    pub health:  u32
+}
+impl Action for PlaceBouy {
+    fn as_data(&self) -> ActionData {
+        ActionData { name: "PlaceBuoy", entity: None, position: Some(self.position), value: Some(self.health as i32) }
+    }
+    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+        let entity = world.spawn_entity();
+        let _ = world.insert_component(entity, Name("Buoy".into()));
+        let _ = world.insert_component(entity, Blocker);
+        let _ = world.insert_component(entity, Position(self.position));
+        let _ = world.insert_component(entity, Player);
+        let _ = world.insert_component(entity, Health(self.health));
+        None
+    }
+    fn score(&self, world: &World) -> i32 {
+        // atm whatever ;)
+        25
+    }
+}
+
+
 pub struct Pause;
 impl Action for Pause {
+    fn as_data(&self) -> ActionData {
+        ActionData { name: "Pause", entity: None, position: None, value: None }
+    }
     fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> { None }
 }
 
@@ -92,6 +136,9 @@ pub struct Damage {
     pub value: u32
 }
 impl Action for Damage {
+    fn as_data(&self) -> ActionData {
+        ActionData { name: "Damage", entity: Some(self.entity), position: None, value: Some(self.value as i32) }
+    }
     fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
         let mut health = world.get_component_mut::<Health>(self.entity)?;
         health.0 = health.0.saturating_sub(self.value);
