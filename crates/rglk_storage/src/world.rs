@@ -97,6 +97,11 @@ impl World {
         let set = self.get_component_set_mut::<T>()?;
         RefMut::filter_map(set, |s| s.get_mut(entity)).ok()
     }
+    pub fn get_entity_components(&self, entity: Entity) -> Vec<Box<Ref<'_, dyn Component>>> {
+        self.component_storage.values()
+            .filter_map(|a| a.get_as_component(entity))
+            .collect::<Vec<_>>()
+    }
 
     // resources
 

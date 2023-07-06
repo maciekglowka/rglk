@@ -42,6 +42,15 @@ pub trait GraphicsBackend {
         size: Vector2F,
         color: SpriteColor
     );
+    fn draw_ui_text(
+        &self,
+        font_name: &str,
+        text: &str,
+        position: Vector2F,
+        font_size: u32,
+        color: SpriteColor
+    );
+    fn viewport_size(&self) -> Vector2F;
 }
 
 #[derive(Clone, Copy)]

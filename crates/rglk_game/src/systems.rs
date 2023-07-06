@@ -3,7 +3,7 @@
 use::rglk_storage::{Entity, World};
 
 use super::actions::{Action, ActorQueue, Damage, Pause, PendingActions};
-use super::components::{Actor, Card, Health, Melee, Player, Position, Projectile};
+use super::components::{Actor, Card, Health, Melee, Player, PlayerCharacter, Position, Projectile};
 use super::wind::Wind;
 
 pub fn game_step(world: &mut World) {
@@ -62,7 +62,7 @@ fn get_action(entity: Entity, world: &mut World) -> Option<Box<dyn Action>> {
         return None;
     };
     if let Some(action) = actor.action.take() { return Some(action) };
-    if world.get_component::<Player>(entity).is_some() { return None };
+    if world.get_component::<PlayerCharacter>(entity).is_some() { return None };
 
     // choose npcs actions
     let mut possible_actions = actor.cards.iter()

@@ -103,9 +103,9 @@ fn get_sprite_renderer(
     world: &World,
 ) -> SpriteRenderer {
     let mut z_index = 0;
-
-    let position = world.get_component::<Position>(entity).unwrap();
+    
     let name = world.get_component::<Name>(entity).unwrap();
+    let position = world.get_component::<Position>(entity).unwrap();
 
     if world.get_component::<Fixture>(entity).is_some() {
         z_index = FIXTURE_Z

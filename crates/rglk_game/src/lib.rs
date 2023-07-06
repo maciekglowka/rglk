@@ -44,7 +44,7 @@ pub fn init(world: &mut World) {
     let _ = world.insert_component(player, components::Name("Player".into()));
     let _ = world.insert_component(player, components::Blocker);
     let _ = world.insert_component(player, components::Health(1));
-    let _ = world.insert_component(player, components::Player{
+    let _ = world.insert_component(player, components::PlayerCharacter{
         active_card: 0
     });
     let _ = world.insert_component(player, components::Actor { 

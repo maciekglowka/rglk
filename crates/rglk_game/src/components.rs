@@ -16,7 +16,11 @@ pub struct Blocker;
 impl Component for Blocker {}
 
 pub struct Card(pub Box<dyn Ability>);
-impl Component for Card {}
+impl Component for Card {
+    fn as_str(&self) -> String {
+        self.0.description()
+    }
+}
 
 // fixed tile furnishings
 pub struct Fixture;
@@ -31,10 +35,18 @@ impl Component for Melee {}
 pub struct Name (pub String);
 impl Component for Name {}
 
-pub struct Player {
+// many can exist in the world
+// marks entities 'allied' or spawned by the player
+
+pub struct Player;
+impl Component for Player {}
+
+// only on in the game world
+// the actual player
+pub struct PlayerCharacter {
     pub active_card: usize
 }
-impl Component for Player {}
+impl Component for PlayerCharacter {}
 
 pub struct Position(pub Vector2I);
 impl Component for Position {}

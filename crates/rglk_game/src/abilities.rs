@@ -17,10 +17,14 @@ pub trait Ability {
         entity: Entity,
         world: &World
     ) -> HashMap<Vector2I, Box<dyn Action>>;
+    fn description(&self) -> String;
 }
 
 pub struct Sailing;
 impl Ability for Sailing {
+    fn description(&self) -> String {
+        "Sailing".into()
+    }
     fn get_possible_actions(&self, entity: Entity, world: &World) -> HashMap<Vector2I, Box<dyn Action>> {
         let mut output = HashMap::new();
         let Some(wind) = world.get_resource::<Wind>() else { return output };
@@ -59,6 +63,9 @@ impl Sailing {
 
 pub struct Swimming;
 impl Ability for Swimming {
+    fn description(&self) -> String {
+        "Swimming".into()
+    }
     fn get_possible_actions(&self, entity: Entity, world: &World) -> HashMap<Vector2I, Box<dyn Action>> {
         let mut output = HashMap::new();
         let Some(position) = world.get_component::<Position>(entity) else { return output };
@@ -80,6 +87,9 @@ pub struct Cannons {
     pub damage: u32
 }
 impl Ability for Cannons {
+    fn description(&self) -> String {
+        "Cannons".into()
+    }
     fn get_possible_actions(&self, entity: Entity, world: &World) -> HashMap<Vector2I, Box<dyn Action>> {
         let mut output = HashMap::new();
         let Some(position) = world.get_component::<Position>(entity) else { return output };

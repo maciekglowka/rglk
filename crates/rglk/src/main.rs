@@ -29,13 +29,17 @@ async fn main() {
     // let mut graphics_assets = rglk_sprites::Assets::new();
     let mut backend = macroquad_sprites::MacroquadBackend::new();
 
-    let _ = backend.load_atlas(
+    backend.load_atlas(
             "ascii",
             "assets/sprites/ascii.png",
             16,
             16,
             None
-        ).await;
+        ).await
+        .expect("Could not load sprites!");
+
+    backend.load_font("default",  "assets/ui/04B_03.ttf").await
+        .expect("Could not find fonts!");
 
     let mut world = rglk_storage::World::new();
     let main_camera = Camera2D {
@@ -86,13 +90,13 @@ fn handle_input(
     world: &rglk_storage::World
 ) {
     if let Some(input) = input {
-        let query = world.query::<rglk_game::components::Player>();
+        let query = world.query::<rglk_game::components::PlayerCharacter>();
         let Some(item) = query.iter().next() else { return };
         let entity = item.entity;
         match input {
             InputAction::Direction(dir) => {
                 let Some(mut actor) = world.get_component_mut::<rglk_game::components::Actor>(entity) else { return };
-                let player = item.get::<rglk_game::components::Player>().unwrap();
+                let player = item.get::<rglk_game::components::PlayerCharacter>().unwrap();
                 let Some(card) = world.get_component::<rglk_game::components::Card>(actor.cards[player.active_card]) else { return };
                 if let Some(action) = card.0.get_possible_actions(entity, world).remove(&dir) {
                     actor.action = Some(action);
@@ -100,7 +104,7 @@ fn handle_input(
             },
             InputAction::ChangeCard => {
                 let Some(actor) = world.get_component::<rglk_game::components::Actor>(entity) else { return };
-                let mut player = item.get_mut::<rglk_game::components::Player>().unwrap();
+                let mut player = item.get_mut::<rglk_game::components::PlayerCharacter>().unwrap();
                 player.active_card = (player.active_card + 1) % actor.cards.len();
             }
         }

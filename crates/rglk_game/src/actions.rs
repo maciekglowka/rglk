@@ -3,7 +3,7 @@ use rglk_storage::{Entity, World};
 
 use std::collections::VecDeque;
 
-use super::components::{Blocker, Health, Name, Player, Position, Projectile};
+use super::components::{Blocker, Health, Name, PlayerCharacter, Position, Projectile};
 
 pub struct PendingActions(pub Vec<Box<dyn Action>>);
 pub struct ActorQueue(pub VecDeque<Entity>);
@@ -24,7 +24,7 @@ impl Action for Travel {
         None
     }
     fn score(&self, world: &World) -> i32 {
-        let Some(player_position) = world.query::<Player>().with::<Position>()
+        let Some(player_position) = world.query::<PlayerCharacter>().with::<Position>()
             .iter()
             .map(|i| i.get::<Position>().unwrap().0)
             .next()
@@ -68,7 +68,7 @@ impl Action for Shoot {
         None
     }
     fn score(&self, world: &World) -> i32 {
-        let Some(player_position) = world.query::<Player>().with::<Position>()
+        let Some(player_position) = world.query::<PlayerCharacter>().with::<Position>()
             .iter()
             .map(|i| i.get::<Position>().unwrap().0)
             .next()
