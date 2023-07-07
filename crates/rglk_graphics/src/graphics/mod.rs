@@ -3,8 +3,9 @@ use rglk_storage::World;
 
 use super::GraphicsState;
 
+mod cursor;
 pub mod renderers;
-mod utils;
+pub mod utils;
 
 use super::GraphicsBackend;
 
@@ -21,5 +22,6 @@ pub fn graphics_update(
     //     state
     // );
     renderers::draw_sprites(state, backend);
+    cursor::draw_cursor(world, state, backend);
     ready
 }

@@ -3,9 +3,7 @@ use std::{
     collections::VecDeque
 };
 
-use rglk_game::{
-    components::{Actor, Fixture, Name, Position, Projectile, Tile},
-};
+use rglk_game::components::{Actor, Fixture, Name, Position, Projectile, Tile};
 use rglk_math::vectors::Vector2F;
 use rglk_storage::{ComponentSet, Entity, World, WorldEvent};
 
@@ -99,21 +97,6 @@ pub fn update_sprites(
     }
     ready
 }
-
-// pub fn update_projectiles(
-//     world: &World,
-//     state: &mut GraphicsState
-// ) -> bool {
-//     let mut ready = true;
-//     let Some(projectiles) = world.get_component_set::<Projectile>() else { return true };
-//     for sprite in state.sprites.iter_mut() {
-//         let Some(projectile) = projectiles.get(sprite.entity) else { continue };
-//         let target = projectile.target.as_f32() * TILE_SIZE;
-//         sprite.v = move_towards(sprite.v, target, MOVEMENT_SPEED);
-//         if sprite.v != target { ready = false }
-//     }
-//     ready
-// }
 
 pub fn draw_sprites(state: &GraphicsState, backend: &dyn GraphicsBackend) {
     for sprite in state.sprites.iter() {

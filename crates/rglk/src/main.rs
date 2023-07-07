@@ -42,7 +42,7 @@ async fn main() {
         .expect("Could not find fonts!");
 
     let mut world = rglk_storage::World::new();
-    let main_camera = Camera2D {
+    let mut main_camera = Camera2D {
         zoom: Vec2::new(2. / screen_width(), -2. / screen_height()),
         target: 0.5 * rglk_graphics::globals::TILE_SIZE * Vec2::splat(8.),
         ..Default::default()
@@ -59,6 +59,7 @@ async fn main() {
     let mut graphics_ready = true;
 
     loop {
+        let frame_start = Instant::now();
         if last_input.elapsed() > Duration::from_millis(200) {
             if let Some(action) = get_input_action() {
                 handle_input(Some(action), &world);
@@ -72,6 +73,7 @@ async fn main() {
             // println!("{:?}", start.elapsed()); 
         }
         clear_background(BLACK);
+        update_camera(&mut main_camera, &world);
         set_camera(&main_camera);
         backend.set_bounds(&main_camera);
         // let start = Instant::now();
@@ -81,10 +83,29 @@ async fn main() {
         rglk_graphics::ui_update(&world, &mut graphics_state, &backend);
         next_frame().await;
 
-
         // temp to save some cpu cycles
-        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::thread::sleep(std::time::Duration::from_millis(16).saturating_sub(frame_start.elapsed()));
     }
+}
+
+fn update_camera(
+    camera: &mut Camera2D,
+    world: &rglk_storage::World
+) {
+    let pos = world.query::<rglk_game::components::PlayerCharacter>()
+        .iter()
+        .next()
+        .unwrap()
+        .get::<rglk_game::components::Position>()
+        .unwrap()
+        .0;
+    let player_v = (pos.as_f32() + rglk_math::vectors::Vector2F::new(0.5, 0.5) ) * rglk_graphics::globals::TILE_SIZE;
+    let v = rglk_graphics::move_towards(
+        rglk_math::vectors::Vector2F::new(camera.target.x, camera.target.y),
+        player_v,
+        2.
+    );
+    camera.target = Vec2::new(v.x, v.y);
 }
 
 fn handle_input(

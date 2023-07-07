@@ -7,7 +7,10 @@ use rglk_events::SubscriberHandle;
 use rglk_math::vectors::Vector2F;
 use rglk_storage::{World, WorldEvent};
 
-pub use graphics::graphics_update;
+pub use graphics::{
+    graphics_update,
+    utils::move_towards
+};
 pub use ui::ui_update;
 
 pub struct GraphicsState {
