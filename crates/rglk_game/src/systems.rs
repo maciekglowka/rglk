@@ -3,7 +3,7 @@
 use::rglk_storage::{Entity, World};
 
 use super::GameManager;
-use super::actions::{Action, ActorQueue, Damage, Pause, PendingActions};
+use super::actions::{Action, ActorQueue, Damage, MeleeAttack, Pause, PendingActions};
 use super::components::{Actor, Card, Health, Melee, Player, PlayerCharacter, Position, Projectile};
 use super::wind::Wind;
 
@@ -12,7 +12,11 @@ pub fn game_step(world: &mut World) {
     let pending_result = process_pending_actions(world);
     kill_units(world);
     // do not process the actor queue if the pending actions were executed
-    if pending_result.is_some() { return };
+    if let Some(result) = pending_result { 
+        // safe to unwrap
+        world.get_resource_mut::<PendingActions>().unwrap().0 = result;
+        return 
+    };
     let Some(actor) = get_current_actor(world) else {
         turn_end(world);
         return
@@ -97,14 +101,17 @@ fn try_melee(entity: Entity, world: &mut World) {
     let Some(mut pending) = world.get_resource_mut::<PendingActions>() else { return };
 
     let targets = world.query::<Health>().with::<Position>().iter()
-        .filter(|a| a.get::<Position>().unwrap().0.manhattan(position.0) == 1)
-        .map(|a| a.entity)
+        .filter_map(|a| match a.get::<Position>() {
+            Some(p) if p.0.manhattan(position.0) == 1 => Some((a.entity, p.0)),
+            _ => None
+        })
+
         .collect::<Vec<_>>();
 
     for target in targets {
-        if !are_hostile(entity, target, world) { continue; }
+        if !are_hostile(entity, target.0, world) { continue; }
         pending.0.push(
-            Box::new(Damage { entity: target, value: melee.0 })
+            Box::new(MeleeAttack { entity, target: target.1, damage: melee.0 })
         );
     }
 }

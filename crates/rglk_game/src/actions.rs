@@ -131,6 +131,39 @@ impl Action for Pause {
     fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> { None }
 }
 
+pub struct MeleeAttack {
+    pub entity: Entity,
+    pub target: Vector2I,
+    pub damage: u32
+}
+impl Action for MeleeAttack {
+    fn as_data(&self) -> ActionData {
+        ActionData { name: "Melee", entity: Some(self.entity), position: Some(self.target), value: Some(self.damage as i32) }
+    }
+    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+        let mut result = Vec::new();
+        for item in world.query::<Health>().with::<Position>().iter() {
+            if item.get::<Position>().unwrap().0 != self.target { continue }
+            result.push(
+                Box::new(Damage { entity: item.entity, value: self.damage })
+                as Box<dyn Action>
+            )
+        }
+        Some(result)
+    }
+    fn score(&self, world: &World) -> i32 {
+        // note actually used
+        let Some(player_position) = world.query::<PlayerCharacter>().with::<Position>()
+            .iter()
+            .map(|i| i.get::<Position>().unwrap().0)
+            .next()
+            else { return 0 };
+
+        if player_position == self.target { return 200 }
+        0
+    }
+}
+
 pub struct Damage {
     pub entity: Entity,
     pub value: u32

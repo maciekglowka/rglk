@@ -69,6 +69,12 @@ pub fn handle_action_events(
 ) {
     for ev in state.ev_actions.read().iter().flatten() {
         match ev.0.name {
+            "Melee" => {
+                if let Some(sprite) = get_entity_sprite(ev.0.entity.unwrap(), state) {
+                    sprite.path.push_back(ev.0.position.unwrap().as_f32() * TILE_SIZE);
+                    sprite.path.push_back(sprite.v);
+                }
+            },
             "Travel" => {
                 if let Some(sprite) = get_entity_sprite(ev.0.entity.unwrap(), state) {
                     sprite.path.push_back(ev.0.position.unwrap().as_f32() * TILE_SIZE);
