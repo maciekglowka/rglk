@@ -1,6 +1,11 @@
-use std::any::TypeId;
+use std::{
+    any::TypeId,
+    collections::VecDeque
+};
 
-use rglk_game::components::{Actor, Fixture, Name, Position, Projectile, Tile};
+use rglk_game::{
+    components::{Actor, Fixture, Name, Position, Projectile, Tile},
+};
 use rglk_math::vectors::Vector2F;
 use rglk_storage::{ComponentSet, Entity, World, WorldEvent};
 
@@ -11,6 +16,7 @@ use crate::globals::{TILE_SIZE, ACTOR_Z, FIXTURE_Z, PROJECTILE_Z, TILE_Z, MOVEME
 pub struct SpriteRenderer {
     pub entity: Entity,
     pub v: Vector2F,
+    pub path: VecDeque<Vector2F>,
     pub atlas_name: String,
     pub index: u32,
     pub z_index: u32,
@@ -57,34 +63,51 @@ pub fn handle_world_events(
     }
 }
 
+pub fn handle_action_events(
+    world: &World,
+    state: &mut GraphicsState
+) {
+    for ev in state.ev_actions.read().iter().flatten() {
+        match ev.0.name {
+            "Travel" => {
+                if let Some(sprite) = get_entity_sprite(ev.0.entity.unwrap(), state) {
+                    sprite.path.push_back(ev.0.position.unwrap().as_f32() * TILE_SIZE);
+                }
+            },
+            _ => continue
+        }
+    }
+}
+
 pub fn update_sprites(
-    positions: &ComponentSet<Position>,
     state: &mut GraphicsState
 ) -> bool {
     let mut ready = true;
     for sprite in state.sprites.iter_mut() {
-        let Some(position) = positions.get(sprite.entity) else { continue };
-        let target = position.0.as_f32() * TILE_SIZE;
-        sprite.v = move_towards(sprite.v, target, MOVEMENT_SPEED);
-        if sprite.v != target { ready = false }
+        let Some(target) = sprite.path.get(0) else { continue };
+        sprite.v = move_towards(sprite.v, *target, MOVEMENT_SPEED);
+        if sprite.v == *target {
+            sprite.path.pop_front();
+        }
+        if sprite.path.len() > 0 { ready = false }
     }
     ready
 }
 
-pub fn update_projectiles(
-    world: &World,
-    state: &mut GraphicsState
-) -> bool {
-    let mut ready = true;
-    let Some(projectiles) = world.get_component_set::<Projectile>() else { return true };
-    for sprite in state.sprites.iter_mut() {
-        let Some(projectile) = projectiles.get(sprite.entity) else { continue };
-        let target = projectile.target.as_f32() * TILE_SIZE;
-        sprite.v = move_towards(sprite.v, target, MOVEMENT_SPEED);
-        if sprite.v != target { ready = false }
-    }
-    ready
-}
+// pub fn update_projectiles(
+//     world: &World,
+//     state: &mut GraphicsState
+// ) -> bool {
+//     let mut ready = true;
+//     let Some(projectiles) = world.get_component_set::<Projectile>() else { return true };
+//     for sprite in state.sprites.iter_mut() {
+//         let Some(projectile) = projectiles.get(sprite.entity) else { continue };
+//         let target = projectile.target.as_f32() * TILE_SIZE;
+//         sprite.v = move_towards(sprite.v, target, MOVEMENT_SPEED);
+//         if sprite.v != target { ready = false }
+//     }
+//     ready
+// }
 
 pub fn draw_sprites(state: &GraphicsState, backend: &dyn GraphicsBackend) {
     for sprite in state.sprites.iter() {
@@ -133,6 +156,7 @@ fn get_sprite_renderer(
     SpriteRenderer { 
         entity: entity,
         v: position.0.as_f32() * TILE_SIZE,
+        path: VecDeque::new(),
         atlas_name: "ascii".into(),
         index,
         z_index,
@@ -145,12 +169,21 @@ fn get_projectile_renderer(
     world: &World,
 ) -> SpriteRenderer {
     let projectile = world.get_component::<Projectile>(entity).unwrap();
+    let mut path = VecDeque::new();
+    path.push_back(projectile.target.as_f32() * TILE_SIZE);
+
     SpriteRenderer { 
         entity: entity,
         v: projectile.source.as_f32() * TILE_SIZE,
+        path,
         atlas_name: "ascii".into(),
         index: 249,
         z_index: PROJECTILE_Z,
         color: SpriteColor(255, 255, 255, 255)
     }
+}
+
+fn get_entity_sprite(entity: Entity, state: &mut GraphicsState) -> Option<&mut SpriteRenderer> {
+    state.sprites.iter_mut()
+        .find(|a| a.entity == entity)
 }

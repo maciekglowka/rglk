@@ -2,6 +2,7 @@ pub mod globals;
 mod graphics;
 mod ui;
 
+use rglk_game::{ActionEvent, GameManager};
 use rglk_events::SubscriberHandle;
 use rglk_math::vectors::Vector2F;
 use rglk_storage::{World, WorldEvent};
@@ -11,13 +12,15 @@ pub use ui::ui_update;
 
 pub struct GraphicsState {
     sprites: Vec<graphics::renderers::SpriteRenderer>,
-    ev_world: SubscriberHandle<WorldEvent>
+    ev_world: SubscriberHandle<WorldEvent>,
+    ev_actions: SubscriberHandle<ActionEvent>
 }
 impl GraphicsState {
-    pub fn new(world: &mut World) -> Self {
+    pub fn new(world: &mut World, manager: &mut GameManager) -> Self {
         GraphicsState { 
             sprites: Vec::new(),
-            ev_world: world.events.subscribe()
+            ev_world: world.events.subscribe(),
+            ev_actions: manager.action_events.subscribe(),
         }
     }
     pub fn sort_sprites(&mut self) {

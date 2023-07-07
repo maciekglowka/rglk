@@ -14,14 +14,12 @@ pub fn graphics_update(
     backend: &dyn GraphicsBackend
 ) -> bool {
     renderers::handle_world_events(world, state);
-    let mut ready = renderers::update_sprites(
-        &world.get_component_set::<Position>().unwrap(),
-        state
-    );
-    ready = ready && renderers::update_projectiles(
-        &world,
-        state
-    );
+    renderers::handle_action_events(world, state);
+    let ready = renderers::update_sprites(state);
+    // ready = ready && renderers::update_projectiles(
+    //     &world,
+    //     state
+    // );
     renderers::draw_sprites(state, backend);
     ready
 }

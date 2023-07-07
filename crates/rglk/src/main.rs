@@ -47,10 +47,12 @@ async fn main() {
         target: 0.5 * rglk_graphics::globals::TILE_SIZE * Vec2::splat(8.),
         ..Default::default()
     };
+    let mut manager = rglk_game::GameManager::new();
     let mut graphics_state = rglk_graphics::GraphicsState::new(
-        &mut world
+        &mut world,
+        &mut manager
     );
-    rglk_game::init(&mut world);
+    rglk_game::init(&mut world, manager);
 
     let mut last_input = Instant::now();
     // let mut last_action = None;

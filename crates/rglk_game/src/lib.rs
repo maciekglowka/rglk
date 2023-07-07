@@ -17,7 +17,9 @@ pub use board::Board;
 pub use wind::Wind;
 pub use systems::game_step;
 
-pub fn init(world: &mut World) {
+pub fn init(world: &mut World, manager: GameManager) {
+    world.insert_resource(manager);
+
     let mut board = board::Board::new();
     board.generate(world);
     world.insert_resource(board);
@@ -30,8 +32,6 @@ pub fn init(world: &mut World) {
 
     let pending = actions::PendingActions(Vec::new());
     world.insert_resource(pending);
-
-    world.insert_resource(GameState::new());
 
     let sail_card = world.spawn_entity();
     let _ = world.insert_component(sail_card, components::Card(
@@ -84,14 +84,14 @@ pub fn init(world: &mut World) {
     }
 }
 
-pub struct GameState {
+pub struct GameManager {
     pub action_events: EventBus<ActionEvent>
 }
-impl GameState {
+impl GameManager {
     pub fn new() -> Self {
-        GameState { action_events: EventBus::new() }
+        GameManager { action_events: EventBus::new() }
     }
 }
 
 #[derive(Clone, Copy)]
-pub struct ActionEvent(actions::ActionData);
+pub struct ActionEvent(pub actions::ActionData);

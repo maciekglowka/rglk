@@ -2,7 +2,7 @@
 
 use::rglk_storage::{Entity, World};
 
-use super::GameState;
+use super::GameManager;
 use super::actions::{Action, ActorQueue, Damage, Pause, PendingActions};
 use super::components::{Actor, Card, Health, Melee, Player, PlayerCharacter, Position, Projectile};
 use super::wind::Wind;
@@ -165,7 +165,7 @@ fn are_hostile(source: Entity, target: Entity, world: &World) -> bool {
 }
 
 fn execute_action(action: &dyn Action, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
-    if let Some(mut state) = world.get_resource_mut::<GameState>() {
+    if let Some(mut state) = world.get_resource_mut::<GameManager>() {
         state.action_events.publish(super::ActionEvent(action.as_data()))
     }
     action.execute(world)
