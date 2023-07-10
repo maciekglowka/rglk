@@ -1,6 +1,6 @@
 pub mod globals;
 mod graphics;
-mod ui;
+pub mod ui;
 
 use rglk_game::{ActionEvent, GameManager};
 use rglk_events::SubscriberHandle;
@@ -11,7 +11,6 @@ pub use graphics::{
     graphics_update,
     utils::move_towards
 };
-pub use ui::ui_update;
 
 pub struct GraphicsState {
     sprites: Vec<graphics::renderers::SpriteRenderer>,

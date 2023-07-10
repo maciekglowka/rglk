@@ -51,15 +51,10 @@ async fn main() {
 
     let mut last_input = Instant::now();
     let mut graphics_ready = true;
+    let mut ui_interaction = false;
 
     loop {
         let frame_start = Instant::now();
-        if last_input.elapsed() > Duration::from_millis(200) {
-            if let Some(action) = input::get_input_action(&main_camera) {
-                input::handle_input(Some(action), &world);
-                last_input = Instant::now();
-            };
-        }
 
         if graphics_ready {
             // let start = Instant::now();
@@ -74,7 +69,18 @@ async fn main() {
         graphics_ready = rglk_graphics::graphics_update(&world, &mut graphics_state, &backend);
         // println!("{:?}", start.elapsed()); 
         set_default_camera();
-        rglk_graphics::ui_update(&world, &mut graphics_state, &backend);
+        ui_interaction = rglk_graphics::ui::ui_update(
+            &world,
+            &mut graphics_state,
+            input::get_ui_state(&main_camera),
+            &backend,
+        );
+        if last_input.elapsed() > Duration::from_millis(200) && !ui_interaction {
+            if let Some(action) = input::get_input_action(&main_camera) {
+                input::handle_input(Some(action), &world);
+                last_input = Instant::now();
+            };
+        }
         next_frame().await;
 
         // temp to save some cpu cycles

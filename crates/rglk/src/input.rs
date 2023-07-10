@@ -1,16 +1,26 @@
 use macroquad::prelude::*;
 
-use rglk_graphics::globals::TILE_SIZE;
-use rglk_math::vectors::Vector2I;
+use rglk_graphics::{
+    globals::TILE_SIZE,
+    ui::{ButtonState, UiState}
+};
+use rglk_math::vectors::{Vector2I, Vector2F};
 
 
 #[derive(Clone, Copy)]
 pub enum InputAction {
     Direction(rglk_math::vectors::Vector2I),
-    ChangeCard
+    // ChangeCard
 }
 
-pub fn get_mouse_tile(
+fn get_mouse_screen_position(
+    camera: &Camera2D
+) -> Vector2F {
+    let v = mouse_position();
+    Vector2F::new(v.0, v.1)
+}
+
+fn get_mouse_tile(
     camera: &Camera2D,
 ) -> Vector2I {
     let mouse = mouse_position();
@@ -22,15 +32,33 @@ pub fn get_mouse_tile(
 }
 
 pub fn get_input_action(camera: &Camera2D) -> Option<InputAction> {
-    if is_key_down(KeyCode::Space) {
-        return Some(InputAction::ChangeCard)
-    }
+    // if is_key_down(KeyCode::Space) {
+    //     return Some(InputAction::ChangeCard)
+    // }
     if is_mouse_button_pressed(MouseButton::Left) {
         return Some(InputAction::Direction(
             get_mouse_tile(camera)
         ))
     }
     None
+}
+
+pub fn get_ui_state(camera: &Camera2D) -> UiState {
+    // use event streams ?
+    let mut left = ButtonState::Up;
+    if is_mouse_button_down(MouseButton::Left) {
+        left = ButtonState::Down
+    }
+    if is_mouse_button_released(MouseButton::Left) {
+        left = ButtonState::Released
+    }
+    if is_mouse_button_pressed(MouseButton::Left) {
+        left = ButtonState::Pressed
+    }
+    UiState {
+        mouse_position: get_mouse_screen_position(camera),
+        mouse_button_left: left
+    }
 }
 
 pub fn handle_input(
@@ -50,11 +78,11 @@ pub fn handle_input(
                     actor.action = Some(action);
                 }
             },
-            InputAction::ChangeCard => {
-                let Some(actor) = item.get::<rglk_game::components::Actor>() else { return };
-                let mut player = item.get_mut::<rglk_game::components::PlayerCharacter>().unwrap();
-                player.active_card = (player.active_card + 1) % actor.cards.len();
-            }
+            // InputAction::ChangeCard => {
+            //     let Some(actor) = item.get::<rglk_game::components::Actor>() else { return };
+            //     let mut player = item.get_mut::<rglk_game::components::PlayerCharacter>().unwrap();
+            //     player.active_card = (player.active_card + 1) % actor.cards.len();
+            // }
         }
     }
 }
