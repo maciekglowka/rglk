@@ -36,28 +36,11 @@ impl Ability for Sailing {
                 a if (-0.1..0.1).contains(&a) => 2,
                 _ => 1
             };
-            if let Some(target) = self.get_valid_tile(position.0, dir, dist, world) {
-                output.insert(dir, Box::new(Travel { entity, target }));
+            if let Some(target) = get_furthest_traversible(position.0, dir, dist, world) {
+                output.insert(target, Box::new(Travel { entity, target }));
             }
         }
-
         output
-    }
-}
-impl Sailing {
-    fn get_valid_tile(
-        &self,
-        source: Vector2I,
-        dir: Vector2I,
-        dist: i32,
-        world: &World
-    ) -> Option<Vector2I> {
-        // gets a furthest possible valid tile at a sailing direction
-        for d in (1..=dist).rev() {
-            let v = source + dir * d;
-            if is_tile_traversible(v, world) { return Some(v) }
-        }
-        None
     }
 }
 
@@ -73,10 +56,10 @@ impl Ability for Swimming {
         for dir in ORTHO_DIRECTIONS {
             let target = position.0 + dir;
             if is_tile_traversible(target, world) {
-                output.insert(dir, Box::new(Travel { entity, target }));
+                output.insert(target, Box::new(Travel { entity, target }));
             }
         }
-        output.insert(Vector2I::ZERO, Box::new(Travel { entity, target: position.0 }));
+        output.insert(position.0, Box::new(Travel { entity, target: position.0 }));
 
         output
     }
@@ -95,7 +78,7 @@ impl Ability for Cannons {
         let Some(position) = world.get_component::<Position>(entity) else { return output };
 
         for dir in ORTHO_DIRECTIONS {
-            output.insert(dir, Box::new(Shoot {
+            output.insert(position.0 + dir, Box::new(Shoot {
                 source: position.0,
                 dir,
                 dist: self.dist,
@@ -106,10 +89,10 @@ impl Ability for Cannons {
     }
 }
 
-pub struct Bouy {
+pub struct Buoy {
     pub health: u32
 }
-impl Ability for Bouy {
+impl Ability for Buoy {
     fn description(&self) -> String {
         "Buoy".into()
     }
@@ -120,7 +103,7 @@ impl Ability for Bouy {
         for dir in ORTHO_DIRECTIONS {
             let target = position.0 + dir;
             if is_tile_traversible(target, world) {
-                output.insert(dir, Box::new(PlaceBouy { position: target, health: self.health }));
+                output.insert(target, Box::new(PlaceBouy { position: target, health: self.health }));
             }
         }
         output
@@ -134,4 +117,27 @@ fn is_tile_traversible(v: Vector2I, world: &World) -> bool {
         if item.get::<Position>().unwrap().0 == v { return false };
     }
     true
+}
+
+fn get_furthest_traversible(source: Vector2I, dir: Vector2I, max_dist: u32, world: &World) -> Option<Vector2I> {
+    let blocker_positions = world.query::<Blocker>().with::<Position>()
+        .iter()
+        .map(|i| i.get::<Position>().unwrap().0)
+        .collect::<Vec<_>>();
+
+    let board = world.get_resource::<Board>()?;
+
+    // find target - eg. the max dist or first blocker on the way
+    let mut target = source;
+    for _ in 1..=max_dist {
+        let t = target + dir;
+        if !board.tiles.contains_key(&t) { break };
+        if blocker_positions.contains(&t) { break };
+        target = t;
+    }
+    if target == source {
+        None
+    } else {
+        Some(target)
+    }
 }

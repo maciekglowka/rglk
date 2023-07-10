@@ -9,6 +9,8 @@ use rglk_graphics;
 use macroquad_sprites;
 use rglk_storage;
 
+mod input;
+
 fn window_conf() -> Conf {
     Conf { 
         window_title: "RGLK".into(),
@@ -18,15 +20,8 @@ fn window_conf() -> Conf {
     }
 }
 
-#[derive(Clone, Copy)]
-enum InputAction {
-    Direction(rglk_math::vectors::Vector2I),
-    ChangeCard
-}
-
 #[macroquad::main(window_conf)]
 async fn main() {
-    // let mut graphics_assets = rglk_sprites::Assets::new();
     let mut backend = macroquad_sprites::MacroquadBackend::new();
 
     backend.load_atlas(
@@ -55,14 +50,13 @@ async fn main() {
     rglk_game::init(&mut world, manager);
 
     let mut last_input = Instant::now();
-    // let mut last_action = None;
     let mut graphics_ready = true;
 
     loop {
         let frame_start = Instant::now();
         if last_input.elapsed() > Duration::from_millis(200) {
-            if let Some(action) = get_input_action() {
-                handle_input(Some(action), &world);
+            if let Some(action) = input::get_input_action(&main_camera) {
+                input::handle_input(Some(action), &world);
                 last_input = Instant::now();
             };
         }
@@ -73,7 +67,7 @@ async fn main() {
             // println!("{:?}", start.elapsed()); 
         }
         clear_background(BLACK);
-        update_camera(&mut main_camera, &world);
+        // update_camera(&mut main_camera, &world);
         set_camera(&main_camera);
         backend.set_bounds(&main_camera);
         // let start = Instant::now();
@@ -88,72 +82,22 @@ async fn main() {
     }
 }
 
-fn update_camera(
-    camera: &mut Camera2D,
-    world: &rglk_storage::World
-) {
-    let pos = world.query::<rglk_game::components::PlayerCharacter>()
-        .iter()
-        .next()
-        .unwrap()
-        .get::<rglk_game::components::Position>()
-        .unwrap()
-        .0;
-    let player_v = (pos.as_f32() + rglk_math::vectors::Vector2F::new(0.5, 0.5) ) * rglk_graphics::globals::TILE_SIZE;
-    let v = rglk_graphics::move_towards(
-        rglk_math::vectors::Vector2F::new(camera.target.x, camera.target.y),
-        player_v,
-        2.
-    );
-    camera.target = Vec2::new(v.x, v.y);
-}
-
-fn handle_input(
-    input: Option<InputAction>,
-    world: &rglk_storage::World
-) {
-    if let Some(input) = input {
-        let query = world.query::<rglk_game::components::PlayerCharacter>();
-        let Some(item) = query.iter().next() else { return };
-        let entity = item.entity;
-        match input {
-            InputAction::Direction(dir) => {
-                let Some(mut actor) = world.get_component_mut::<rglk_game::components::Actor>(entity) else { return };
-                let player = item.get::<rglk_game::components::PlayerCharacter>().unwrap();
-                let Some(card) = world.get_component::<rglk_game::components::Card>(actor.cards[player.active_card]) else { return };
-                if let Some(action) = card.0.get_possible_actions(entity, world).remove(&dir) {
-                    actor.action = Some(action);
-                }
-            },
-            InputAction::ChangeCard => {
-                let Some(actor) = world.get_component::<rglk_game::components::Actor>(entity) else { return };
-                let mut player = item.get_mut::<rglk_game::components::PlayerCharacter>().unwrap();
-                player.active_card = (player.active_card + 1) % actor.cards.len();
-            }
-        }
-    }
-}
-
-fn get_input_action() -> Option<InputAction> {
-    if is_key_down(KeyCode::Space) {
-        return Some(InputAction::ChangeCard)
-    }
-    let mut dir = None;
-    if is_key_down(KeyCode::A) {
-        dir = Some(rglk_math::vectors::Vector2I::new(-1, 0));
-    }
-    if is_key_down(KeyCode::D) {
-        dir = Some(rglk_math::vectors::Vector2I::new(1, 0));
-    }
-    if is_key_down(KeyCode::W) {
-        dir = Some(rglk_math::vectors::Vector2I::new(0, -1));
-    }
-    if is_key_down(KeyCode::S) {
-        dir = Some(rglk_math::vectors::Vector2I::new(0, 1));
-
-    }
-    match dir {
-        Some(d) => Some(InputAction::Direction(d)),
-        _ => None
-    }
-}
+// fn update_camera(
+//     camera: &mut Camera2D,
+//     world: &rglk_storage::World
+// ) {
+//     let pos = world.query::<rglk_game::components::PlayerCharacter>()
+//         .iter()
+//         .next()
+//         .unwrap()
+//         .get::<rglk_game::components::Position>()
+//         .unwrap()
+//         .0;
+//     let player_v = (pos.as_f32() + rglk_math::vectors::Vector2F::new(0.5, 0.5)) * rglk_graphics::globals::TILE_SIZE;
+//     let v = rglk_graphics::move_towards(
+//         rglk_math::vectors::Vector2F::new(camera.target.x, camera.target.y),
+//         player_v,
+//         2.
+//     );
+//     camera.target = Vec2::new(v.x, v.y);
+// }

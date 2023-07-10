@@ -43,7 +43,7 @@ pub fn init(world: &mut World, manager: GameManager) {
     ));
     let buoy_card = world.spawn_entity();
     let _ = world.insert_component(buoy_card, components::Card(
-        Box::new(abilities::Bouy { health: 2 })
+        Box::new(abilities::Buoy { health: 2 })
     ));
 
     let player = world.spawn_entity();

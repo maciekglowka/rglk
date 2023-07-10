@@ -21,14 +21,12 @@ pub fn draw_cursor(
     if queue.0.front() != Some(&item.entity) { return };
     let Some(actor) = item.get::<Actor>() else { return };
     let player = item.get::<PlayerCharacter>().unwrap();
-    let position = item.get::<Position>().unwrap();
     let Some(card) = world.get_component::<Card>(actor.cards[player.active_card]) else { return };
     for action in card.0.get_possible_actions(item.entity, world) {
-        let v = position.0 + action.0;
         backend.draw_world_sprite(
             "ascii",
             249,
-            v.as_f32() * TILE_SIZE,
+            action.0.as_f32() * TILE_SIZE,
             Vector2F::new(TILE_SIZE, TILE_SIZE),
             SpriteColor(255, 255, 255, 255)
         );
