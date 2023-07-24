@@ -1,23 +1,25 @@
+use rogalik::math::vectors::{Vector2I, Vector2F};
+use rogalik::storage::{ComponentSet, Entity, World, WorldEvent};
+
 use rglk_game::{
     components::{Actor, PlayerCharacter},
     Wind
 };
-use rglk_math::vectors::{Vector2I, Vector2F};
-use rglk_storage::{ComponentSet, Entity, World, WorldEvent};
 
 use super::{GraphicsState, GraphicsBackend, SpriteColor};
 
 mod buttons;
 mod cards;
-// mod commands;
+mod input;
 
 #[derive(Default)]
-pub struct UiState {
-    pub mouse_position: Vector2F,
+pub struct InputState {
+    pub mouse_world_position: Vector2F,
+    pub mouse_screen_position: Vector2F,
     pub mouse_button_left: ButtonState
 }
 
-#[derive(Default)]
+#[derive(Default, PartialEq)]
 pub enum ButtonState {
     #[default]
     Up,
@@ -27,15 +29,17 @@ pub enum ButtonState {
 }
 
 pub fn ui_update(
-    world: &World,
-    state: &mut GraphicsState,
-    ui_state: UiState,
+    world: &mut World,
+    input_state: InputState,
     backend: &dyn GraphicsBackend
-) -> bool {
-    let mut interaction = false;
+) {
     draw_wind_queue(world, backend);
-    cards::handle_cards(world, backend, &ui_state);
-    interaction
+    if let Some(clicked_card) = cards::draw_cards(world, backend, &input_state) {
+        cards::click_card(clicked_card, world);
+    }
+    else {
+        input::handle_tile_input(world, &input_state);
+    }
 }
 
 
@@ -58,43 +62,3 @@ fn draw_wind_queue(world: &World, backend: &dyn GraphicsBackend) {
         );
     }
 }
-
-
-// fn draw_cards(world: &World, backend: &dyn GraphicsBackend) {
-//     let Some(cards) = world.query::<PlayerCharacter>().with::<Actor>()
-//             .iter()
-//             .map(|i| i.get::<Actor>().unwrap().cards.clone())
-//             .next()
-//             else { return };
-//     let active = world.query::<PlayerCharacter>().iter()
-//         .next()
-//         .unwrap()
-//         .get::<PlayerCharacter>()
-//         .unwrap()
-//         .active_card;
-
-//     let viewport_size = backend.viewport_size();
-
-//     for (i, card) in cards.iter().enumerate() {
-//         let desc = world.get_entity_components(*card)
-//             .iter()
-//             .map(|c| c.as_str())
-//             .collect::<Vec<_>>();
-//         let desc = desc.join(", ");
-//         let color = if i == active {
-//             SpriteColor(255, 255, 255, 255)
-//         } else {
-//             SpriteColor(128, 128, 128, 255)
-//         };
-//         backend.draw_ui_text(
-//             "default",
-//             &desc,
-//             Vector2F::new(
-//                 32.,
-//                 viewport_size.y - 32. * (i as f32 + 1.)
-//             ),
-//             32,
-//             color
-//         );
-//     }
-// }

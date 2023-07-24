@@ -1,10 +1,10 @@
 // use std::collections::VecDeque;
 
-use::rglk_storage::{Entity, World};
+use::rogalik::storage::{Entity, World};
 
 use super::GameManager;
-use super::actions::{Action, ActorQueue, Damage, MeleeAttack, Pause, PendingActions};
-use super::components::{Actor, Card, Health, Melee, Player, PlayerCharacter, Position, Projectile};
+use super::actions::{Action, ActorQueue, Damage, MeleeAttack, Pause, PendingActions, SelectedAction};
+use super::components::{Actor, Card, Cooldown, Health, Melee, Player, PlayerCharacter, Position, Projectile};
 use super::wind::Wind;
 
 pub fn game_step(world: &mut World) {
@@ -36,8 +36,10 @@ fn process_pending_actions(world: &mut World) -> Option<Vec<Box<dyn Action>>> {
     let mut output = Vec::new();
     for action in pending {
         let res = execute_action(&*action, world);
-        if let Some(res) = res {
-            resulting.extend(res);
+        if let Ok(res) = res {
+            if let Some(next) = res {
+                resulting.extend(next);
+            }
         }
         output.push(action);
     }
@@ -54,17 +56,24 @@ fn get_current_actor(world: &mut World) -> Option<Entity> {
 
 fn process_actor(entity: Entity, world: &mut World) -> bool {
     // return true is succesful
-    let Some(action) = get_action(entity, world) else { return false };
-    let res = execute_action(&*action, world);
-    if let Some(res) = res {
-        if let Some(mut pending) = world.get_resource_mut::<PendingActions>() {
-            pending.0.extend(res);
+    let Some(selected) = get_action(entity, world) else { return false };
+
+    if let Ok(res) = execute_action(&*selected.action, world) {
+        if let Some(next) = res {
+            if let Some(mut pending) = world.get_resource_mut::<PendingActions>() {
+                pending.0.extend(next);
+            }
+        }
+        if let Some(card) = selected.card {
+            if let Some(mut cooldown) = world.get_component_mut::<Cooldown>(card) {
+                cooldown.current = cooldown.base;
+            }
         }
     }
     true
 }
 
-fn get_action(entity: Entity, world: &mut World) -> Option<Box<dyn Action>> {
+fn get_action(entity: Entity, world: &mut World) -> Option<SelectedAction> {
     let Some(mut actor) = world.get_component_mut::<Actor>(entity) else {
         // remove actor from the queue as it might have been killed or smth
         world.get_resource_mut::<ActorQueue>()?.0.retain(|a| *a != entity);
@@ -83,8 +92,8 @@ fn get_action(entity: Entity, world: &mut World) -> Option<Box<dyn Action>> {
 
     possible_actions.sort_by(|a, b| a.score(world).cmp(&b.score(world)));
     match possible_actions.pop() {
-        Some(a) => Some(a),
-        _ => Some(Box::new(Pause))
+        Some(a) => Some(SelectedAction { action: a, card: None }),
+        _ => Some(SelectedAction { action: Box::new(Pause), card: None })
     }
 }
 
@@ -160,7 +169,15 @@ fn turn_end(world: &mut World) {
     if let Some(mut wind) = world.get_resource_mut::<Wind>() {
         wind.pop_wind();
     }
+    reduce_cooldown(world);
     collect_actor_queue(world);
+}
+
+fn reduce_cooldown(world: &mut World) {
+    for item in world.query::<Cooldown>().iter() {
+        let mut cooldown = item.get_mut::<Cooldown>().unwrap();
+        cooldown.current = cooldown.current.saturating_sub(1);
+    }
 }
 
 fn are_hostile(source: Entity, target: Entity, world: &World) -> bool {
@@ -171,7 +188,7 @@ fn are_hostile(source: Entity, target: Entity, world: &World) -> bool {
     }
 }
 
-fn execute_action(action: &dyn Action, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+fn execute_action(action: &dyn Action, world: &mut World) -> Result<Option<Vec<Box<dyn Action>>>, ()> {
     if let Some(mut state) = world.get_resource_mut::<GameManager>() {
         state.action_events.publish(super::ActionEvent(action.as_data()))
     }

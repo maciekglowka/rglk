@@ -1,8 +1,8 @@
 use rand::prelude::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use rglk_math::vectors::{Vector2I, ORTHO_DIRECTIONS};
-use::rglk_storage::{Entity, World};
+use rogalik::math::vectors::{Vector2I, ORTHO_DIRECTIONS};
+use::rogalik::storage::{Entity, World};
 
 use crate::components::{Fixture, Name, Position, Tile};
 use crate::globals::BOARD_SIZE;

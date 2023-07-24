@@ -2,10 +2,10 @@ use std::{
     any::TypeId,
     collections::VecDeque
 };
+use rogalik::math::vectors::Vector2F;
+use rogalik::storage::{ComponentSet, Entity, World, WorldEvent};
 
 use rglk_game::components::{Actor, Fixture, Name, Position, Projectile, Tile};
-use rglk_math::vectors::Vector2F;
-use rglk_storage::{ComponentSet, Entity, World, WorldEvent};
 
 use super::super::{GraphicsState, GraphicsBackend, SpriteColor};
 use super::utils::move_towards;

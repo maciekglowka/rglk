@@ -2,10 +2,13 @@ pub mod globals;
 mod graphics;
 pub mod ui;
 
+use rogalik::events::SubscriberHandle;
+use rogalik::storage::{World, WorldEvent};
+use rogalik::math::vectors::{Vector2F, Vector2I};
+
 use rglk_game::{ActionEvent, GameManager};
-use rglk_events::SubscriberHandle;
-use rglk_math::vectors::Vector2F;
-use rglk_storage::{World, WorldEvent};
+
+use globals::TILE_SIZE;
 
 pub use graphics::{
     graphics_update,
@@ -60,3 +63,12 @@ pub trait GraphicsBackend {
 
 #[derive(Clone, Copy)]
 pub struct SpriteColor(pub u8, pub u8, pub u8, pub u8);
+
+fn world_to_tile(
+    v: Vector2F,
+) -> Vector2I {
+    Vector2I::new (
+        (v.x / TILE_SIZE).floor() as i32,
+        (v.y / TILE_SIZE).floor() as i32,
+    )
+}

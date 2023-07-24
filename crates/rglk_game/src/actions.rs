@@ -1,5 +1,5 @@
-use rglk_math::vectors::Vector2I;
-use rglk_storage::{Entity, World};
+use rogalik::math::vectors::Vector2I;
+use rogalik::storage::{Entity, World};
 
 use std::collections::VecDeque;
 
@@ -7,6 +7,11 @@ use super::components::{Blocker, Health, Name, Player, PlayerCharacter, Position
 
 pub struct PendingActions(pub Vec<Box<dyn Action>>);
 pub struct ActorQueue(pub VecDeque<Entity>);
+
+pub struct SelectedAction {
+    pub action: Box<dyn Action>,
+    pub card: Option<Entity>
+}
 
 // data sharing struct (eg. for use with the graphics module)
 // if this won't be generic enough, events would have to accept cloning
@@ -19,7 +24,7 @@ pub struct ActionData {
 }
 
 pub trait Action {
-    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>>;
+    fn execute(&self, world: &mut World) -> Result<Option<Vec<Box<dyn Action>>>, ()>;
     fn score(&self, world: &World) -> i32 { 0 }
     fn as_data(&self) -> ActionData;
 }
@@ -32,10 +37,10 @@ impl Action for Travel {
     fn as_data(&self) -> ActionData {
         ActionData { name: "Travel", entity: Some(self.entity), position: Some(self.target), value: None }
     }
-    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
-        let mut position = world.get_component_mut::<Position>(self.entity)?;
+    fn execute(&self, world: &mut World) -> Result<Option<Vec<Box<dyn Action>>>, ()> {
+        let mut position = world.get_component_mut::<Position>(self.entity).ok_or(())?;
         position.0 = self.target;
-        None
+        Ok(None)
     }
     fn score(&self, world: &World) -> i32 {
         let Some(player_position) = world.query::<PlayerCharacter>().with::<Position>()
@@ -74,7 +79,7 @@ impl Action for Shoot {
     fn as_data(&self) -> ActionData {
         ActionData { name: "Shoot", entity: None, position: Some(self.source), value: Some(self.damage as i32) }
     }
-    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+    fn execute(&self, world: &mut World) -> Result<Option<Vec<Box<dyn Action>>>, ()> {
         let target = self.get_target(world);
         let entity = world.spawn_entity();
         let _ = world.insert_component(entity, Projectile{
@@ -82,7 +87,7 @@ impl Action for Shoot {
             target,
             source: self.source
         });
-        None
+        Ok(None)
     }
     fn score(&self, world: &World) -> i32 {
         let Some(player_position) = world.query::<PlayerCharacter>().with::<Position>()
@@ -107,14 +112,14 @@ impl Action for PlaceBouy {
     fn as_data(&self) -> ActionData {
         ActionData { name: "PlaceBuoy", entity: None, position: Some(self.position), value: Some(self.health as i32) }
     }
-    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+    fn execute(&self, world: &mut World) -> Result<Option<Vec<Box<dyn Action>>>, ()> {
         let entity = world.spawn_entity();
         let _ = world.insert_component(entity, Name("Buoy".into()));
         let _ = world.insert_component(entity, Blocker);
         let _ = world.insert_component(entity, Position(self.position));
         let _ = world.insert_component(entity, Player);
         let _ = world.insert_component(entity, Health(self.health));
-        None
+        Ok(None)
     }
     fn score(&self, world: &World) -> i32 {
         // atm whatever ;)
@@ -128,7 +133,7 @@ impl Action for Pause {
     fn as_data(&self) -> ActionData {
         ActionData { name: "Pause", entity: None, position: None, value: None }
     }
-    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> { None }
+    fn execute(&self, world: &mut World) -> Result<Option<Vec<Box<dyn Action>>>, ()> { Ok(None) }
 }
 
 pub struct MeleeAttack {
@@ -140,7 +145,7 @@ impl Action for MeleeAttack {
     fn as_data(&self) -> ActionData {
         ActionData { name: "Melee", entity: Some(self.entity), position: Some(self.target), value: Some(self.damage as i32) }
     }
-    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
+    fn execute(&self, world: &mut World) -> Result<Option<Vec<Box<dyn Action>>>, ()> {
         let mut result = Vec::new();
         for item in world.query::<Health>().with::<Position>().iter() {
             if item.get::<Position>().unwrap().0 != self.target { continue }
@@ -149,7 +154,7 @@ impl Action for MeleeAttack {
                 as Box<dyn Action>
             )
         }
-        Some(result)
+        Ok(Some(result))
     }
     fn score(&self, world: &World) -> i32 {
         // note actually used
@@ -172,10 +177,10 @@ impl Action for Damage {
     fn as_data(&self) -> ActionData {
         ActionData { name: "Damage", entity: Some(self.entity), position: None, value: Some(self.value as i32) }
     }
-    fn execute(&self, world: &mut World) -> Option<Vec<Box<dyn Action>>> {
-        let mut health = world.get_component_mut::<Health>(self.entity)?;
+    fn execute(&self, world: &mut World) -> Result<Option<Vec<Box<dyn Action>>>, ()> {
+        let mut health = world.get_component_mut::<Health>(self.entity).ok_or(())?;
         health.0 = health.0.saturating_sub(self.value);
-        None
+        Ok(None)
     }
     // score is not implemented as it always should be a resulting action
 }

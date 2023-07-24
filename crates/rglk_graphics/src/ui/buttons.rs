@@ -1,6 +1,6 @@
-use rglk_math::vectors::Vector2F;
+use rogalik::math::vectors::Vector2F;
 
-use super::{GraphicsBackend, ButtonState, UiState, SpriteColor};
+use super::{GraphicsBackend, ButtonState, InputState, SpriteColor};
 
 pub struct Button<'a> {
     origin: Vector2F,
@@ -56,9 +56,9 @@ impl<'a> Button<'a> {
         );
         self
     }
-    pub fn clicked(&self, state: &UiState) -> bool {
+    pub fn clicked(&self, state: &InputState) -> bool {
         if let ButtonState::Released = state.mouse_button_left { 
-            let v = state.mouse_position;
+            let v = state.mouse_screen_position;
             return v.x >= self.origin.x && v.y >= self.origin.y &&
             v.x <= self.origin.x + self.w && v.y <= self.origin.y + self.h
         }

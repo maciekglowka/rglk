@@ -7,7 +7,7 @@ use std::{
 use rglk_game;
 use rglk_graphics;
 use macroquad_sprites;
-use rglk_storage;
+use rogalik::storage;
 
 mod input;
 
@@ -36,9 +36,9 @@ async fn main() {
     backend.load_font("default",  "assets/ui/04B_03.ttf").await
         .expect("Could not find fonts!");
 
-    let mut world = rglk_storage::World::new();
+    let mut world = rogalik::storage::World::new();
     let mut main_camera = Camera2D {
-        zoom: Vec2::new(2. / screen_width(), -2. / screen_height()),
+        zoom: Vec2::new(2. / screen_width(), 2. / screen_height()),
         target: 0.5 * rglk_graphics::globals::TILE_SIZE * Vec2::splat(8.),
         ..Default::default()
     };
@@ -49,9 +49,9 @@ async fn main() {
     );
     rglk_game::init(&mut world, manager);
 
-    let mut last_input = Instant::now();
+    // let mut last_input = Instant::now();
     let mut graphics_ready = true;
-    let mut ui_interaction = false;
+    // let mut ui_interaction = false;
 
     loop {
         let frame_start = Instant::now();
@@ -69,18 +69,11 @@ async fn main() {
         graphics_ready = rglk_graphics::graphics_update(&world, &mut graphics_state, &backend);
         // println!("{:?}", start.elapsed()); 
         set_default_camera();
-        ui_interaction = rglk_graphics::ui::ui_update(
-            &world,
-            &mut graphics_state,
-            input::get_ui_state(&main_camera),
+        rglk_graphics::ui::ui_update(
+            &mut world,
+            input::get_input_state(&main_camera),
             &backend,
         );
-        if last_input.elapsed() > Duration::from_millis(200) && !ui_interaction {
-            if let Some(action) = input::get_input_action(&main_camera) {
-                input::handle_input(Some(action), &world);
-                last_input = Instant::now();
-            };
-        }
         next_frame().await;
 
         // temp to save some cpu cycles

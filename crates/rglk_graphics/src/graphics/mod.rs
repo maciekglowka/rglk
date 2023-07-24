@@ -1,5 +1,6 @@
+use rogalik::storage::World;
+
 use rglk_game::components::Position;
-use rglk_storage::World;
 
 use super::GraphicsState;
 

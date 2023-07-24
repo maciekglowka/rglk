@@ -1,9 +1,9 @@
 use rand::prelude::*;
 use std::collections::VecDeque;
 
-use rglk_events::EventBus;
-use rglk_math::vectors::Vector2I;
-use::rglk_storage::World;
+use rogalik::events::EventBus;
+use rogalik::math::vectors::Vector2I;
+use::rogalik::storage::World;
 
 pub mod actions;
 pub mod abilities;
@@ -41,10 +41,12 @@ pub fn init(world: &mut World, manager: GameManager) {
     let _ = world.insert_component(cannons_card, components::Card(
         Box::new(abilities::Cannons { dist: 4, damage: 2 })
     ));
+    let _ = world.insert_component(cannons_card, components::Cooldown { base: 5, current: 0 });
     let buoy_card = world.spawn_entity();
     let _ = world.insert_component(buoy_card, components::Card(
         Box::new(abilities::Buoy { health: 2 })
     ));
+    let _ = world.insert_component(buoy_card, components::Cooldown { base: 3, current: 0 });
 
     let player = world.spawn_entity();
     let _ = world.insert_component(player, components::Position(Vector2I::new(0, 0)));

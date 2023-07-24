@@ -1,23 +1,34 @@
-use rglk_game::components::{Actor, PlayerCharacter};
-use rglk_storage::World;
+use rogalik::storage::{Component, World};
 
-use super::{UiState, GraphicsBackend, SpriteColor};
+use rglk_game::components::{Actor, Card, Cooldown, PlayerCharacter};
+
+use super::{InputState, GraphicsBackend, SpriteColor};
 use super::buttons::Button;
 
-pub fn handle_cards(world: &World, backend: &dyn GraphicsBackend, state: &UiState) {
+pub fn draw_cards(world: &World, backend: &dyn GraphicsBackend, state: &InputState) -> Option<usize> {
     let query = world.query::<PlayerCharacter>().with::<Actor>();
-    let Some(item) = query.iter().next() else { return };
+    let item = query.iter().next()?;
     let cards = &item.get::<Actor>().unwrap().cards;
-    let active = item.get::<PlayerCharacter>().unwrap().active_card;
+    let active = item.get::<PlayerCharacter>()?.active_card;
 
     let viewport_size = backend.viewport_size();
 
-    for (i, card) in cards.iter().enumerate() {
-        let desc = world.get_entity_components(*card)
-            .iter()
-            .map(|c| c.as_str())
-            .collect::<Vec<_>>();
-        let desc = desc.join(", ");
+    let mut clicked = None;
+    for (i, entity) in cards.iter().enumerate() {
+        // let desc = world.get_entity_components(*card)
+        //     .iter()
+        //     .map(|c| c.as_str())
+        //     .collect::<Vec<_>>();
+        let mut desc = if let Some(card) = world.get_component::<Card>(*entity) {
+            card.as_str()
+        } else {
+            String::new()
+        };
+        if let Some(cooldown) = world.get_component::<Cooldown>(*entity) {
+            desc += &format!(" ({})", cooldown.current);
+        }
+
+        // let desc = desc.join(", ");
         let color = if i == active {
             SpriteColor(255, 255, 255, 255)
         } else {
@@ -26,18 +37,24 @@ pub fn handle_cards(world: &World, backend: &dyn GraphicsBackend, state: &UiStat
         if Button::new(
                 32.,
                 viewport_size.y - 48. * (i as f32 + 1.),
-                150.,
+                250.,
                 32.
             )
             .with_text(&desc, SpriteColor(0, 0, 0, 255), 32)
             .with_color(color)
             .draw(backend)
             .clicked(state) {
-                click_card(i, &mut item.get_mut::<PlayerCharacter>().unwrap())
+                clicked = Some(i)
             }
     }
+    clicked
 }
 
-fn click_card(index: usize, player: &mut PlayerCharacter) {
-    player.active_card = index;
+pub fn click_card(index: usize, world: &World) {
+    world.query::<PlayerCharacter>().iter()
+        .next()
+        .unwrap()
+        .get_mut::<PlayerCharacter>()
+        .unwrap()
+        .active_card = index;
 }

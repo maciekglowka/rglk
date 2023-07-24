@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-macroquad = "0.3" 
+macroquad = "0.4" 
 
 rglk_graphics = { path = "../rglk_graphics" }
-rglk_math = { path = "../rglk_math" }
+rogalik = { path = "../../../rogalik" }

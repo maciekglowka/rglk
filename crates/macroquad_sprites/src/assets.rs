@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use rglk_math::vectors::Vector2F;
+use rogalik::math::vectors::Vector2F;
 
 use super::errors::AssetError;
 

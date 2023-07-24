@@ -3,8 +3,8 @@ use std::{
     f32::consts::PI
 };
 
-use rglk_math::vectors::{Vector2I, ORTHO_DIRECTIONS};
-use rglk_storage::{Entity, World};
+use rogalik::math::vectors::{Vector2I, ORTHO_DIRECTIONS};
+use rogalik::storage::{Entity, World};
 
 use super::actions::{Action, PlaceBouy, Shoot, Travel};
 use super::board::Board;

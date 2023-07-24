@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use std::collections::VecDeque;
 
-use rglk_math::vectors::{Vector2I, ORTHO_DIRECTIONS};
+use rogalik::math::vectors::{Vector2I, ORTHO_DIRECTIONS};
 
 use crate::globals::WIND_QUEUE;
 

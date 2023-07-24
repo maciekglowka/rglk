@@ -1,13 +1,14 @@
-use::rglk_storage::{Component, Entity};
+use::rogalik::storage::{Component, Entity};
 
-use rglk_math::vectors::Vector2I;
+use rogalik::math::vectors::Vector2I;
 
 use super::abilities::Ability;
-use super::actions::Action;
+use super::actions::{Action, SelectedAction};
 
 pub struct Actor {
     pub cards: Vec<Entity>,
-    pub action: Option<Box<dyn Action>>
+    // action, optional - card entity
+    pub action: Option<SelectedAction>
 }
 impl Component for Actor {}
 
@@ -19,6 +20,16 @@ pub struct Card(pub Box<dyn Ability>);
 impl Component for Card {
     fn as_str(&self) -> String {
         self.0.description()
+    }
+}
+
+pub struct Cooldown {
+    pub base: u32,
+    pub current: u32
+}
+impl Component for Cooldown {
+    fn as_str(&self) -> String {
+        format!("Cooldown ({})", self.current)
     }
 }
 
